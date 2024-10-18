@@ -2,12 +2,17 @@ require('dotenv').config()
 const express = require('express')
 const app = express()
 const cors = require('cors')
+const cookieParser = require('cookie-parser')
+const connectToDb = require('./Config/db.js')
+const userRoutes = require('./Routes/Routes.js')
+
 app.use (cors())
 
-const connectToDb = require('./Config/db.js')
-// connectToDb()
+app.use(cookieParser())
 
-const userRoutes = require('./Routes/Routes.js')
+connectToDb()
+
+
 app.use(express.json())
 app.use(express.urlencoded({extended:true}))
 app.use('/',userRoutes)
