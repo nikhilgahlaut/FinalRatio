@@ -1,10 +1,14 @@
 const express = require('express')
-const {loginDataValidate , jwtAuth} = require('../MiddleWare/middleware.js')
-const{home,logIn, logOut}= require('../Controllers/controller.js')
+const {loginDataValidate , signUpDataValidate, jwtAuth} = require('../MiddleWare/middleware.js')
+const{home,logIn,logout,signup,authUser}= require('../Controllers/controller.js')
+// const signUpDataValidate = require('../MiddleWare/middleware.js')
+
 const router = express.Router()
 
 router.get('/',home)
-// router.post('/login',loginDataValidate,logIn)
-// router.post('/logOut',jwtAuth,logOut)
+router.post('/signup',signUpDataValidate,signup)
+router.post('/login',loginDataValidate,logIn)
+router.get('/authuser', jwtAuth, authUser)//user authentication
+router.get('/logOut',jwtAuth,logout)
 
 module.exports  = router
