@@ -33,10 +33,10 @@ try {
     
 
 exports.logIn = async (req,res) => {
-    const{username,password} = req.body;
+    const{email,password} = req.body;
     try {
         const user = await userModel
-        .findOne({username})
+        .findOne({email})
         .select('+password')
 
         if (!user) {

@@ -22,7 +22,9 @@ const userModel = new mongoose.Schema({
         select:false,
     },
     role:{
-        type:String
+        type:String,
+        enum: ['app_admin', 'proj_owner','proj_client','staff','undefined'], // Define user roles
+        default: 'undefined',
     },
     wbs:{
         type:[String]

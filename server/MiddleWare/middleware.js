@@ -12,8 +12,8 @@ const signUpDataValidate = (req,res,next)=>{
 }
 
 const loginDataValidate = (req,res,next)=>{
-    const {username,password} = req.body
-    if(!username || !password){
+    const {email,password} = req.body
+    if(!email || !password){
         return res.status(400).json({
             success:false,
             message:"every field is required"
