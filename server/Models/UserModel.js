@@ -7,14 +7,15 @@ const userModel = new mongoose.Schema({
         type:String,
         required:true
     },
-    username:{
+    // username:{
+    //     type:String,
+    //     required:true,
+    //     unique:true,
+    // },
+    email:{
         type:String,
         required:true,
         unique:true,
-    },
-    email:{
-        type:String,
-        required:true
     },
     password:{
         type:String,
@@ -22,7 +23,9 @@ const userModel = new mongoose.Schema({
         select:false,
     },
     role:{
-        type:String
+        type:String,
+        enum: ['app_admin', 'proj_owner','proj_client','staff','undefined'], // Define user roles
+        default: 'undefined',
     },
     wbs:{
         type:[String]

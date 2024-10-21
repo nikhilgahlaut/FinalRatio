@@ -1,10 +1,16 @@
 const signUpDataValidate = (req,res,next)=>{
-    const {name,username,password,email} = req.body
+    const {name,confirmPassword,password,email,username} = req.body
 
-    if(!name || !username || !password || !email){
-        res.status(400).json({
+    if(!name ||!password || !email|| !confirmPassword){
+        return res.status(400).json({
             success:false,
             message:"all fields are required!!"
+        })
+    }
+    else if (confirmPassword != password) {
+        return res.status(400).json({
+            success: false,
+            message: "password dosent match"
         })
     }
 
@@ -12,8 +18,8 @@ const signUpDataValidate = (req,res,next)=>{
 }
 
 const loginDataValidate = (req,res,next)=>{
-    const {username,password} = req.body
-    if(!username || !password){
+    const {email,password} = req.body
+    if(!email || !password){
         return res.status(400).json({
             success:false,
             message:"every field is required"

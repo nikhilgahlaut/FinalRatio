@@ -4,40 +4,43 @@ exports.home = (req, res) => {
     res.send("<h1>Home response</h1>")
 }
 
-exports.signup = async(req,res)=>{
-try {
+exports.signup = async (req, res) => {
+    try {
         const userInfo = userModel(req.body)
         const result = await userInfo.save()
         console.log(userInfo)
-        return res.status(200).json({
+        return res.status(201).json({
             success: true,
             data: result
         })
 
 
     } catch (error) {
+        console.log(error);
+        
         if (error.code === 11000) {
             console.log(error);
 
-            res.status(400).json({
+            return res.status(400).json({
                 success: false,
                 message: 'duplicate entry'
             })
         }
-        res.status(400).json({
+        
+        return res.status(400).json({
             success: false,
             message: error.message
-        })
+        });
     }
-}
-    
+};
 
-exports.logIn = async (req,res) => {
-    const{username,password} = req.body;
+
+exports.logIn = async (req, res) => {
+    const { email, password } = req.body;
     try {
         const user = await userModel
-        .findOne({username})
-        .select('+password')
+            .findOne({ email })
+            .select('+password')
 
         if (!user) {
             return res.status(400).json({
@@ -45,10 +48,10 @@ exports.logIn = async (req,res) => {
             });
         }
 
-        const isPasswordMatch = await bcrypt.compare(password,user.password)
+        const isPasswordMatch = await bcrypt.compare(password, user.password)
 
-        if(!isPasswordMatch){
-            return res.status(400).json({ message:'invalid password'});
+        if (!isPasswordMatch) {
+            return res.status(400).json({ message: 'invalid password' });
         }
 
         //generating token
@@ -60,17 +63,17 @@ exports.logIn = async (req,res) => {
             httpOnly: true
         }
 
-        res.cookie("token",token,cookieOption)
+        res.cookie("token", token, cookieOption)
         res.status(200).json({
-            success:true,
-            message:'login success!!'
+            success: true,
+            message: 'login success!!'
         })
-        
-        
+
+
     } catch (e) {
         res.status(400).json({
-            success:false,
-            message:e.message
+            success: false,
+            message: e.message
         })
     }
 
