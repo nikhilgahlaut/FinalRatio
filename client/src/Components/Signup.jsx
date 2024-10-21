@@ -7,7 +7,6 @@ function Signup() {
 
   const navigate = useNavigate();
   const [data, setData] = useState({
-    username: '',
     name: '',
     email: '',
     password: '',
@@ -17,24 +16,26 @@ function Signup() {
 
   const registerUser = async (e) => {
     e.preventDefault();
-    const { username, name, email, confirmPassword, password } = data;
+    const {name, email, confirmPassword, password } = data;
     try {
       const { data } = await axios.post('/signup', {
-        username, name, email, confirmPassword, password
+        name, email, confirmPassword, password
       })
-      if (response.data.success) {
-        setData({});
-        toast.success('register success')
+      if (data.error) {
+        toast.error(data.error)
+      } else {
+        setData({})
+        toast.success('Register success')
         navigate('/login')
-
       }
+
 
     } catch (error) {
       console.log(error);
-      if (error.response && error.response.data) {
-        toast.error(error.response.data.message || "An error occurred during registration.");
+      if (error.response) {
+        toast.error(error.response.data.message);
       } else {
-        toast.error("Network error: " + error.message);
+        toast.error(error.message);
       }
     }
 
@@ -54,10 +55,6 @@ function Signup() {
               <div>
                 <label htmlFor="name" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Your name</label>
                 <input type="text" name="name" id="name" value={data.name} onChange={(e) => setData({ ...data, name: e.target.value })} className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-green-500 dark:focus:border-green-500" placeholder="Your name here" required="" />
-              </div>
-              <div>
-                <label htmlFor="username" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Your username</label>
-                <input type="text" name="username" id="username" value={data.username} onChange={(e) => setData({ ...data, username: e.target.value })} className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-green-500 dark:focus:border-green-500" placeholder="Your name here" required="" />
               </div>
               <div>
                 <label htmlFor="email" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Your email</label>

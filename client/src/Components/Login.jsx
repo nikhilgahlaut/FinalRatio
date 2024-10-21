@@ -30,9 +30,9 @@ function Login() {
         } catch (error) {
             console.log(error);
             if (error.response) {
-                toast.error(error.response.data.error || "An error occurred during registration.");
+                toast.error(error.response.data.message);
             } else {
-                toast.error("Network error: " + error.message);
+                toast.error(error.message);
             }
         }
 
