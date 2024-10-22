@@ -1,5 +1,5 @@
 const signUpDataValidate = (req,res,next)=>{
-    const {name,confirmPassword,password,email,username} = req.body
+    const {name,confirmPassword,password,email} = req.body
 
     if(!name ||!password || !email|| !confirmPassword){
         return res.status(400).json({
@@ -13,7 +13,6 @@ const signUpDataValidate = (req,res,next)=>{
             message: "password dosent match"
         })
     }
-
     next();
 }
 

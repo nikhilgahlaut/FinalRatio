@@ -7,20 +7,17 @@ const userModel = new mongoose.Schema({
         type:String,
         required:true
     },
-    // username:{
-    //     type:String,
-    //     required:true,
-    //     unique:true,
-    // },
     email:{
         type:String,
         required:true,
-        unique:true,
+        unique:true, 
+        
     },
     password:{
         type:String,
         required:true,
         select:false,
+        minlength:[8,'minimum 8 charachter required']
     },
     role:{
         type:String,
