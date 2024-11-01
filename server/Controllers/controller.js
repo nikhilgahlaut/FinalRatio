@@ -119,3 +119,23 @@ exports.logout = (req, res) => {
         })
     }
 }
+
+exports.updateAccess = async (req, res) => {
+    const { email, usertype } = req.body;
+    try {
+        const user = await userModel.findOneAndUpdate(
+          { email: email },
+          { role: usertype },
+          { new: true }
+        );
+    
+        if (!user) {
+          return res.status(404).send('User not found');
+        }
+    
+        res.send(user);
+      } catch (error) {
+        console.log(Error);
+        res.status(500).send('Server error');
+      }
+}
