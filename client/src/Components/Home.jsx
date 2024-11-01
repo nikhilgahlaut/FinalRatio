@@ -1,11 +1,120 @@
-import React from 'react'
-
+import React, { useState } from 'react';
+import './Home.css'
+import { FiSettings } from 'react-icons/fi';
 function Home() {
+  const months = [
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+  ];
+  const [services] = useState(["Service A", "Service B", "Service C","Service d"]);
+  const [progressData, setProgressData] = useState({});
+  const [currentMonthIndex, setCurrentMonthIndex] = useState(0);
+  const [transitionDirection, setTransitionDirection] = useState('');
+  const settingFn = () => {
+    // Your settings function logic
+  };
+  const handleSliderChange = (month, service, value) => {
+    setProgressData(prevData => ({
+      ...prevData,
+      [month]: {
+        ...prevData[month],
+        [service]: value
+      }
+    }));
+  };
+  const getSliderBackground = (value) => {
+    return {
+      background: `linear-gradient(to right, #10B981 ${value}%, #E5E7EB ${value}%)`
+    };
+  };
+  const goLeft = () => {
+    if (currentMonthIndex > 0) {
+      setTransitionDirection('left');
+      setCurrentMonthIndex(currentMonthIndex - 3);
+    }
+  };
+  const goRight = () => {
+    if (currentMonthIndex < months.length - 3) {
+      setTransitionDirection('right');
+      setCurrentMonthIndex(currentMonthIndex + 3);
+    }
+  };
+  const displayedMonths = months.slice(currentMonthIndex, currentMonthIndex + 3);
   return (
-    <div>Home
-      <img src="data:image/jpeg;base64,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" alt="image" />
+    <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-white dark:bg-gray-900 dark:text-white relative">
+      {/* Settings Icon in Top Right */}
+      <button
+        onClick={settingFn}
+        className="absolute top-4 right-4 p-2 rounded-full text-gray-800 dark:text-white bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700"
+      >
+        <FiSettings size={24} />
+      </button>
+      {/* Scrollable Grid */}
+      <div className="flex items-center justify-center space-x-4 mb-72">
+        {/* Left Button */}
+        <button
+          onClick={goLeft}
+          disabled={currentMonthIndex === 0}
+          className="px-3 py-1 bg-gray-300 text-gray-800 rounded-md disabled:opacity-50 dark:bg-gray-700 dark:text-white"
+        >
+          &larr;
+        </button>
+        {/* Grid Container with Animation */}
+        <div className="overflow-hidden max-h-[500px] w-full border border-gray-300 dark:border-gray-700 rounded-lg shadow-md">
+          <div
+            className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1 transition-transform duration-500 ${transitionDirection === 'left' ? '-translate-x-full' : 'translate-x-full'}`}
+            style={{ transform: 'translateX(0)' }}
+            onAnimationEnd={() => setTransitionDirection('')}
+          >
+            {/* Header row for services */}
+            <div className="sticky top-0 grid grid-cols-1 auto-cols-fr text-center font-semibold bg-gray-200 dark:bg-gray-800">
+              <div className="py-2"></div>
+              {services.map((service, index) => (
+                <div key={index} className="py-2 bg-gray-300 dark:bg-gray-700">
+                  {service}
+                </div>
+              ))}
+            </div>
+            {/* Month Rows */}
+            {displayedMonths.map((month, rowIndex) => (
+              <div key={rowIndex} className="grid grid-cols-1 auto-cols-fr text-center">
+                {/* Month label */}
+                <div className="sticky left-0 bg-gray-200 dark:bg-gray-800 font-semibold py-2 px-4">
+                  {month}
+                </div>
+                {/* Service cells with slider */}
+                {services.map((service, colIndex) => (
+                  <div
+                    key={colIndex}
+                    className="flex flex-col items-center py-2 px-4 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700"
+                  >
+                    <span>{progressData[month]?.[service] || 0}%</span>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      step="5"
+                      value={progressData[month]?.[service] || 0}
+                      onChange={(e) => handleSliderChange(month, service, parseInt(e.target.value))}
+                      className="w-full mt-2"
+                      style={getSliderBackground(progressData[month]?.[service] || 0)}
+                    />
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+        {/* Right Button */}
+        <button
+          onClick={goRight}
+          disabled={currentMonthIndex >= months.length - 3}
+          className="px-3 py-1 bg-gray-300 text-gray-800 rounded-md disabled:opacity-50 dark:bg-gray-700 dark:text-white"
+        >
+          &rarr;
+        </button>
+      </div>
     </div>
-  )
+  );
 }
-
-export default Home
+export default Home;
