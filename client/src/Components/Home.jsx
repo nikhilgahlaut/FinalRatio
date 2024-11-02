@@ -10,9 +10,14 @@ function Home() {
   const [progressData, setProgressData] = useState({});
   const [currentMonthIndex, setCurrentMonthIndex] = useState(0);
   const [transitionDirection, setTransitionDirection] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [allServices, setAllServices] = useState([])
+
   const settingFn = () => {
     // Settings action
+    setIsModalOpen(!isModalOpen)
   };
+
   // Determine the current month and set the current quarter index
   useEffect(() => {
     const currentMonth = new Date().getMonth();
@@ -50,6 +55,24 @@ function Home() {
       >
         <FiSettings size={24} />
       </button>
+      {/* //logic for setting button pop-up */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-sm w-full">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Settings</h2>
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
+              This is your settings pop-up. You can add any content here.
+            </p>
+            <button
+              onClick={settingFn}
+              className="mt-4 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="flex items-center justify-center space-x-4 mb-72">
         <button
           onClick={goLeft}
@@ -60,10 +83,9 @@ function Home() {
         </button>
         <div className={`overflow-hidden max-h-[500px] w-full border border-gray-300 dark:border-gray-700 rounded-lg shadow-md`}>
           <div
-            className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1 transition-transform duration-500 ${
-              transitionDirection === 'left' ? '-translate-x-full' :
-              transitionDirection === 'right'?'translate-x-full':''
-            }`}
+            className={`grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1 transition-transform duration-500 ${transitionDirection === 'left' ? '-translate-x-full' :
+              transitionDirection === 'right' ? 'translate-x-full' : ''
+              }`}
             style={{ transform: 'translateX(0)' }}
             onAnimationEnd={() => setTransitionDirection('')}
           >
