@@ -18,7 +18,7 @@ function Signup() {
     e.preventDefault();
     const {name, email, confirmPassword, password } = data;
     try {
-      const { data } = await axios.post('/signup', {
+      const { data } = await axios.post('/user/signup', {
         name, email, confirmPassword, password
       })
       if (data.error) {
