@@ -95,7 +95,8 @@ function Home() {
                       onChange={(e) => handleSliderChange(month, service, parseInt(e.target.value))}
                       className={`w-full mt-2 ${months.indexOf(month) < currentMonth - 1 || months.indexOf(month) > currentMonth ? "cursor-not-allowed opacity-50" : ""}`}
                       style={{
-                        background: `linear-gradient(to right, ${months.indexOf(month) >= currentMonth - 1 && months.indexOf(month) <= currentMonth ? "green" : "gray"} ${progressData[month]?.[service] || 0}%, #e0e0e0 0%)`
+                        background: `linear-gradient(to right, ${months.indexOf(month) >= currentMonth - 1 && months.indexOf(month) <= currentMonth ? "green" : "gray"}
+                        ${progressData[month]?.[service] || 0}%, #e0e0e0 0%)`
                       }}
                       disabled={months.indexOf(month) < currentMonth - 1 || months.indexOf(month) > currentMonth}
                     />
