@@ -6,6 +6,7 @@ import { Routes, Route } from 'react-router-dom'
 import Home from './Components/Home'
 import axios from 'axios'
 import Navbar from './Components/Navbar'
+// import bg from './assets/'
 
 
 axios.defaults.baseURL = 'http://localhost:5000/'
