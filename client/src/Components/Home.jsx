@@ -105,7 +105,8 @@ function Home() {
                 {services.map((service, colIndex) => (
                   <div
                     key={colIndex}
-                    className="flex flex-col items-center py-2 px-4 bg-white dark:bg-gray-900 dark:text-green-600 border border-gray-300 dark:border-gray-700"
+                    className="flex flex-col items-center py-2 px-4 bg-white 
+                    dark:bg-gray-900 dark:text-green-600 border border-gray-300 dark:border-gray-700"
                   >
                     <span>{progressData[month]?.[service] || 0}%</span>
                     <input
