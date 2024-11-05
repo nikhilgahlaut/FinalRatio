@@ -7,7 +7,7 @@ import Home from './Components/Home'
 import axios from 'axios'
 import Navbar from './Components/Navbar'
 import LandingPage from './Components/LandingPage'
-import TokenComponents from './Components/TokenComponents'
+//import TokenComponents from './Components/TokenComponents'
 //import bg from './assets/'
 
 // const endpoint = 'user';
