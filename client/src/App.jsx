@@ -6,6 +6,7 @@ import { Routes, Route } from 'react-router-dom'
 import Home from './Components/Home'
 import axios from 'axios'
 import Navbar from './Components/Navbar'
+import Access from './Components/Access'
 
 
 axios.defaults.baseURL = 'http://localhost:5000/'
@@ -20,6 +21,7 @@ function App() {
         <Route path='/' element={<Home />} />
         <Route path='/signup' element={<Signup />} />
         <Route path='/login' element={<Login />} />
+        <Route path='/access' element={<Access />} />
       </Routes>
     </div>
   )
