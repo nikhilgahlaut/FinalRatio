@@ -2,8 +2,9 @@ const mongoose = require('mongoose');
 
 const timetracking = new mongoose.Schema({
   taskId: {
-    type: String,
-    required: true,
+    type: mongoose.Schema.Types.ObjectId,
+    auto: true,
+    index: true,
     unique: true
   },
   taskType: {
@@ -28,18 +29,24 @@ const timetracking = new mongoose.Schema({
   },
   budgetHours: {
     type: Number,
-    required: true
+    default: ""
   },
   loggedHours: {
     type: Number,
     default: 0
+  },
+  status: {
+    type: String,
+    enum: ['TO-DO', 'In-Progress','Complete','Done'],
+    default: "TO-DO"
   },
   updatedOn: {
     type: Date,
     default: Date.now
   },
   comments: {
-    type: String
+    type: String,
+    default: ""
   }
 });
 
