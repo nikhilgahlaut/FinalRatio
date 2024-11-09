@@ -3,33 +3,26 @@ import { useState } from 'react';
 
 
 function Access() {
-  const [key, setKey] = useState('home');
+  const [key, setKey] = useState('New');
   return (
     <div id="controlled-tab-example" className="mb-3">
       <div className="flex border-b">
         <button
-          className={`p-4 ${key === 'home' ? 'border-b-2 border-blue-500' : ''}`}
-          onClick={() => setKey('home')}
+          className={`p-4 ${key === 'New' ? 'border-b-2 border-purple-500' : ''}`}
+          onClick={() => setKey('New')}
         >
-          Home
+          New Access
         </button>
         <button
-          className={`p-4 ${key === 'profile' ? 'border-b-2 border-blue-500' : ''}`}
-          onClick={() => setKey('profile')}
+          className={`p-4 ${key === 'Existing' ? 'border-b-2 border-purple-500' : ''}`}
+          onClick={() => setKey('Existing')}
         >
-          Profile
-        </button>
-        <button
-          className={`p-4 ${key === 'contact' ? 'border-b-2 border-blue-500' : ''}`}
-          onClick={() => setKey('contact')}
-        >
-          Contact
+          Existing Access
         </button>
       </div>
       <div className="p-4">
-        {key === 'home' && <div>Tab content for Home</div>}
-        {key === 'profile' && <div>Tab content for Profile</div>}
-        {key === 'contact' && <div>Tab content for Contact</div>}
+        {key === 'New' && <div>Tab content for New Access</div>}
+        {key === 'Existing' && <div>Tab content for Existing Access</div>}
       </div>
     </div>
 
