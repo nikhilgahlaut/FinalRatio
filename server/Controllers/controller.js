@@ -139,3 +139,27 @@ exports.updateAccess = async (req, res) => {
         res.status(500).send('Server error');
       }
 }
+
+exports.getUsersByStatus = async (req, res) => {
+    const { statusType } = req.params;
+  
+    try {
+      let users;
+      if (statusType === 'undefined') {
+        users = await userModel.find({ status: 'undefined' });
+      } else if (statusType === 'defined') {
+        users = await userModel.find({ status: { $ne: 'undefined' } });
+      } else {
+        return res.status(400).send('Invalid status type');
+      }
+  
+      if (users.length === 0) {
+        return res.status(404).send('No users found');
+      }
+  
+      res.send(users);
+    } catch (error) {
+      console.error(error);
+      res.status(500).send('Server error');
+    }
+  };
