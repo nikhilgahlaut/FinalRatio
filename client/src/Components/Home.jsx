@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import ReactSwitch from 'react-switch';
 import './Home.css';
 import { FiSettings } from 'react-icons/fi';
 function Home() {
@@ -6,12 +7,17 @@ function Home() {
     "Jan", "Feb", "Mar", "Apr", "May", "Jun",
     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
   ];
-  const [services] = useState(["Service A", "Service B", "Service C"]);
+  const [services] = useState(["Service A", "Service B", "Service C", "Service D", "Service E"]);
   const [progressData, setProgressData] = useState({});
   const [currentMonthIndex, setCurrentMonthIndex] = useState(0);
   const [transitionDirection, setTransitionDirection] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [allServices, setAllServices] = useState([])
+  const [checked, setChecked] = useState(true);
+  
+
+  const handleChange = val => {
+    setChecked(val)
+  }
 
   const settingFn = () => {
     // Settings action
@@ -48,7 +54,7 @@ function Home() {
   const displayedMonths = months.slice(currentMonthIndex, currentMonthIndex + 3);
   const currentMonth = new Date().getMonth();
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-white dark:bg-gray-900 dark:text-white relative">
+    <div className="flex flex-col items-center justify-center min-h-screen p-1 bg-white dark:bg-gray-900 dark:text-white relative">
       <button
         onClick={settingFn}
         className="absolute top-4 right-4 p-2 rounded-full text-gray-800 dark:text-white bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700"
@@ -59,10 +65,14 @@ function Home() {
       {isModalOpen && (
         <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-sm w-full">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Settings</h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
-              This is your settings pop-up. You can add any content here.
-            </p>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Services</h2>
+              <div className="app ext-gray-600 dark:text-gray-400 mb-4" style={{ textAlign: "center" }}>
+                <h4>Service 1</h4>
+                <ReactSwitch
+                  checked={checked}
+                  onChange={handleChange}
+                />
+              </div>
             <button
               onClick={settingFn}
               className="mt-4 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
@@ -73,7 +83,7 @@ function Home() {
         </div>
       )}
 
-      <div className="flex items-center justify-center space-x-4 mb-72">
+      <div className="flex items-center justify-center space-x-4">
         <button
           onClick={goLeft}
           disabled={currentMonthIndex === 0}
