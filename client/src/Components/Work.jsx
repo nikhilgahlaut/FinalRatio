@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import Select from 'react-select';
 import './timetracking.css';
 import TaskForm from './work-form';
 
@@ -14,14 +15,16 @@ const Work = () => {
     budgetHours: '',
     loggedHours: '',
     updatedOn: '',
-    status: '',
-    comments: ''
+    status: ''
   });
-  const [assignedToFilter, setAssignedToFilter] = useState('');
-  const [projectFilter, setProjectFilter] = useState('');
+  const [filters, setFilters] = useState({
+    assignedTo: [],
+    projectName: []
+  });
   const [isEditing, setIsEditing] = useState(false);
   const [currentTaskId, setCurrentTaskId] = useState(null);
   const [showForm, setShowForm] = useState(false);
+  const [showDetails, setShowDetails] = useState(null);
 
   useEffect(() => {
     fetchTasks();
@@ -72,8 +75,7 @@ const Work = () => {
       budgetHours: '',
       loggedHours: '',
       updatedOn: '',
-      status: '',
-      comments: ''
+      status: ''
     });
   };
 
@@ -89,72 +91,209 @@ const Work = () => {
     setShowForm(true);
   };
 
+  const handleFilterChange = (selectedOptions, actionMeta) => {
+    setFilters({ ...filters, [actionMeta.name]: selectedOptions });
+  };
+
   const filteredTasks = tasks.filter(task => {
+    const assignedToFilter = filters.assignedTo.map(option => option.value.toLowerCase());
+    const projectNameFilter = filters.projectName.map(option => option.value.toLowerCase());
+
     return (
-      (assignedToFilter === '' || task.assignedTo.toLowerCase().includes(assignedToFilter.toLowerCase())) &&
-      (projectFilter === '' || task.projectName.toLowerCase().includes(projectFilter.toLowerCase()))
+      (assignedToFilter.length === 0 || assignedToFilter.some(filter => task.assignedTo.toLowerCase().includes(filter))) &&
+      (projectNameFilter.length === 0 || projectNameFilter.some(filter => task.projectName.toLowerCase().includes(filter)))
     );
   });
 
-  return (
-    <div>
-      {showForm ? (
-        <section className='bg-white dark:bg-gray-900 min-h-screen'>
-      <div className="flex flex-col items-center justify-center px-6 py-8 mx-auto ">
-        <div className="flex items-center mb-6 text-2xl font-semibold text-gray-900 dark:text-white">ADD TASK</div>
+  const handleCancel = () => {
+    resetForm();
+    setIsEditing(false);
+    setCurrentTaskId(null);
+    setShowForm(false);
+  };
 
-        <div className="w-full bg-white rounded-lg shadow dark:border md:mt-0 sm:max-w-md xl:p-0 dark:bg-gray-800 dark:border-gray-700">
-          <div className="p-6 space-y-4 md:space-y-6 sm:p-8">
-          <h2>{isEditing ? 'Edit Task' : 'Add New Task'}</h2>
-          <TaskForm
-            formData={formData}
-            handleChange={handleChange}
-            handleSubmit={isEditing ? handleUpdateItem : handleAddItem}
-            isEditing={isEditing}
-            showForm={showForm}
-          />
-          <button className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700 space-y-4 md:space-y-6" onClick={() => setShowForm(false)}>Cancel</button>
-          </div>
-        </div>
-      </div>
-      
-    </section>
-      ) : (
-        <div className="bg-sky-950 bg-contain">
-          <h1 className='bg-grey-700 font-bold py-2 px-4 text-white font-bold'>Work Page</h1>
-          <div className='flex flex-row-reverse ... flex flex-wrap'>
-          <button onClick={() => setShowForm(true)} className="bg-blue-700 hover:bg-blue-900 text-white font-bold py-2 px-4 rounded-full padding p-4 border ">+Add Task</button>
-          <input
-            type="text"
-            className="border border-gray-300 rounded p-3 mr-2"
-            placeholder="Filter by Assigned To"
-            value={assignedToFilter}
-            onChange={(e) => setAssignedToFilter(e.target.value)}
-          />
-          <input
-            type="text"
-            placeholder="Filter by Project"
-            className="border border-gray-300 rounded p-3 mr-2"
-            value={projectFilter}
-            onChange={(e) => setProjectFilter(e.target.value)}
-          />
-          </div>
-          <div className='flex flex-row ... flex flex-wrap'>
-          {filteredTasks.map((task, index) => (
-            <div className=" bg-gray-700 grid grid-cols-3 gap-3 max-w-sm rounded-lg overflow-hidden shadow-lg p-6 bg-blue border border-gray-200 m-4 filters p-3 " key={index}>
-        <div className="">
-        <h2 className="text-white mb-4">{task.taskType}</h2>
-        <h2 className="text-white mb-3">{task.projectName}</h2>
-      <div className="text-white mb-4">{task.loggedHours}</div>
-      <div className="text-white mb-4">{task.assignedTo}</div>
-      <div className="text-green-600 mb-4 ">{task.status}</div>
-      <button className="bg-gray-700 hover:bg-blue-800 text-white font py-1 px-2 rounded-full padding p-1" onClick={() => handleEdit(task)}>Edit</button>
-    </div>
-</div>
-          ))}
+  const handleCardClick = (task) => {
+    setShowDetails(task._id === showDetails ? null : task._id);
+  };
+
+  const categorizeTasks = (tasks) => {
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+    const nextWeek = new Date(today);
+    nextWeek.setDate(today.getDate() + 7);
+
+    const dueToday = [];
+    const dueTomorrow = [];
+    const dueNextWeek = [];
+    const dueLater = [];
+
+    tasks.forEach(task => {
+      const dueDate = new Date(task.dueDate);
+      if (dueDate.toDateString() === today.toDateString()) {
+        dueToday.push(task);
+      } else if (dueDate.toDateString() === tomorrow.toDateString()) {
+        dueTomorrow.push(task);
+      } else if (dueDate <= nextWeek) {
+        dueNextWeek.push(task);
+      } else {
+        dueLater.push(task);
+      }
+    });
+
+    return { dueToday, dueTomorrow, dueNextWeek, dueLater };
+  };
+
+  const { dueToday, dueTomorrow, dueNextWeek, dueLater } = categorizeTasks(filteredTasks);
+
+  return (
+    <div className="min-h-screen border-gray-200 dark:bg-gray-900">
+      {showForm && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 ">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md relative overflow-auto max-h-[90vh]">
+            <h2 className="text-2xl font-bold mb-4">{isEditing ? 'Edit Task' : 'Add New Task'}</h2>
+            <TaskForm
+              formData={formData}
+              handleChange={handleChange}
+              handleSubmit={isEditing ? handleUpdateItem : handleAddItem}
+              isEditing={isEditing}
+              handleCancel={handleCancel}
+            />
+           {/* <button className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700 mt-4" onClick={handleCancel}>Cancel</button> */}
           </div>
         </div>
       )}
+      <div className="bg-slate-50 bg-contain min-h-screen">
+        <div className='flex flex-row-reverse flex-wrap bg-slate-600'>
+          <button onClick={() => setShowForm(true)} className="bg-blue-700 hover:bg-blue-900 text-white font-bold py-4 px-4 rounded-full p-1 mr-2">+Add Task</button>
+          <Select
+            isMulti
+            name="assignedTo"
+            options={tasks.map(task => ({ value: task.assignedTo, label: task.assignedTo }))}
+            className="basic-multi-select rounded p-3 mr-2 bg-slate-600"
+            classNamePrefix="select"
+            placeholder="Filter by Assigned To"
+            value={filters.assignedTo}
+            onChange={handleFilterChange}
+          />
+          <Select
+            isMulti
+            name="projectName"
+            options={tasks.map(task => ({ value: task.projectName, label: task.projectName }))}
+            className="basic-multi-select rounded p-3 mr-2 bg-slate-600"
+            classNamePrefix="select"
+            placeholder="Filter by Project"
+            value={filters.projectName}
+            onChange={handleFilterChange}
+          />
+        </div>
+        <h1 className=' font-bold py-2 px-4 text-black'>WORK PAGE</h1>
+        <div className='p-4'>
+          <h2 className="text-xl font-bold text-black mb-2">Due Today</h2>
+          <div className='flex flex-wrap'>
+            {dueToday.map((task, index) => (
+              <div
+                className="bg-white max-w-sm rounded-lg overflow-hidden shadow-lg p-6 border border-gray-200 m-4 cursor-pointer"
+                key={index}
+                onClick={() => handleCardClick(task)}
+              >
+                <h2 className="text-gray-900 font-bold text-xl mb-2">{task.taskType}</h2>
+                <h3 className="text-gray-700 text-base mb-2">{task.projectName}</h3>
+                <div className="text-gray-700 text-sm mb-2">Assigned To: {task.assignedTo}</div>
+                <div className="text-gray-700 text-sm mb-2">Status: {task.status}</div>
+                {showDetails === task._id && (
+                  <div className="mt-4">
+                    <p className="text-gray-700 text-sm mb-2">Due Date: {task.dueDate}</p>
+                    <p className="text-gray-700 text-sm mb-2">Budget Hours: {task.budgetHours}</p>
+                    <p className="text-gray-700 text-sm mb-2">Logged Hours: {task.loggedHours}</p>
+                    <p className="text-gray-700 text-sm mb-2">Updated On: {task.updatedOn}</p>
+                    <p className="text-gray-700 text-sm mb-2">Status: {task.status}</p>
+                    <button className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700 mt-4" onClick={() => handleEdit(task)}>Edit</button>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          <h2 className="text-xl font-bold text-black mb-2">Due Tomorrow</h2>
+          <div className='flex flex-wrap'>
+            {dueTomorrow.map((task, index) => (
+              <div
+                className="bg-white max-w-sm rounded-lg overflow-hidden shadow-lg p-6 border border-gray-200 m-4 cursor-pointer"
+                key={index}
+                onClick={() => handleCardClick(task)}
+              >
+                <h2 className="text-gray-900 font-bold text-xl mb-2">{task.taskType}</h2>
+                <h3 className="text-gray-700 text-base mb-2">{task.projectName}</h3>
+                <div className="text-gray-700 text-sm mb-2">Assigned To: {task.assignedTo}</div>
+                <div className="text-gray-700 text-sm mb-2">Status: {task.status}</div>
+                {showDetails === task._id && (
+                  <div className="mt-4">
+                    <p className="text-gray-700 text-sm mb-2">Due Date: {task.dueDate}</p>
+                    <p className="text-gray-700 text-sm mb-2">Budget Hours: {task.budgetHours}</p>
+                    <p className="text-gray-700 text-sm mb-2">Logged Hours: {task.loggedHours}</p>
+                    <p className="text-gray-700 text-sm mb-2">Updated On: {task.updatedOn}</p>
+                    <p className="text-gray-700 text-sm mb-2">Status: {task.status}</p>
+                    <button className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700 mt-4" onClick={() => handleEdit(task)}>Edit</button>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          <h2 className="text-xl font-bold text-black mb-2">Due Next Week</h2>
+          <div className='flex flex-wrap'>
+  {dueNextWeek.map((task, index) => (
+    <div
+      className="bg-gray-100 max-w-lg rounded-lg overflow-hidden shadow-lg p-8 border border-gray-300 m-4 cursor-pointer transition-transform transform hover:scale-105 hover:shadow-2xl"
+      key={index}
+      onClick={() => handleCardClick(task)}
+    >
+      <h2 className="text-gray-900 font-bold text-2xl mb-2 bg-cyan-400 p-2 rounded-lg">{task.taskType}</h2>
+      <h3 className="text-gray-800 text-xl mb-2">{task.projectName}</h3>
+      <div className="text-gray-700 text-lg mb-2">Assigned To: <span className="font-semibold">{task.assignedTo}</span></div>
+      <div className="text-gray-700 text-lg mb-2">Status: <span className="font-semibold">{task.status}</span></div>
+      {showDetails === task._id && (
+        <div className="mt-4">
+          <p className="text-gray-700 text-lg mb-2">Due Date: <span className="font-semibold">{task.dueDate}</span></p>
+          <p className="text-gray-700 text-lg mb-2">Budget Hours: <span className="font-semibold">{task.budgetHours}</span></p>
+          <p className="text-gray-700 text-lg mb-2">Logged Hours: <span className="font-semibold">{task.loggedHours}</span></p>
+          <p className="text-gray-700 text-lg mb-2">Updated On: <span className="font-semibold">{task.updatedOn}</span></p>
+          <button className="bg-blue-600 text-white px-5 py-3 rounded-lg hover:bg-blue-800 transition duration-200 mt-4" onClick={() => handleEdit(task)}>Edit</button>
+        </div>
+      )}
+    </div>
+  ))}
+</div>
+
+
+          <h2 className="text-xl font-bold text-black mb-2">Due Later</h2>
+          <div className='flex flex-wrap'>
+            {dueLater.map((task, index) => (
+              <div
+                className="bg-white max-w-sm rounded-lg overflow-hidden shadow-lg p-6 border border-gray-200 m-4 cursor-pointer"
+                key={index}
+                onClick={() => handleCardClick(task)}
+              >
+                <h2 className="text-gray-900 font-bold text-xl mb-2">{task.taskType}</h2>
+                <h3 className="text-gray-700 text-base mb-2">{task.projectName}</h3>
+                <div className="text-gray-700 text-sm mb-2">Assigned To: {task.assignedTo}</div>
+                <div className="text-gray-700 text-sm mb-2">Status: {task.status}</div>
+                {showDetails === task._id && (
+                  <div className="mt-4">
+                    <p className="text-gray-700 text-sm mb-2">Due Date: {task.dueDate}</p>
+                    <p className="text-gray-700 text-sm mb-2">Budget Hours: {task.budgetHours}</p>
+                    <p className="text-gray-700 text-sm mb-2">Logged Hours: {task.loggedHours}</p>
+                    <p className="text-gray-700 text-sm mb-2">Updated On: {task.updatedOn}</p>
+                    <p className="text-gray-700 text-sm mb-2">Status: {task.status}</p>
+                    <button className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700 mt-4" onClick={() => handleEdit(task)}>Edit</button>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

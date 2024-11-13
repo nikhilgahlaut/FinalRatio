@@ -1,32 +1,36 @@
 import React from 'react';
 
-const TaskForm = ({ formData, handleChange, handleSubmit, isEditing, showForm }) => {
-  // Define the fields that should be editable in insert and update modes
+const TaskForm = ({ formData, handleChange, handleSubmit, isEditing, handleCancel }) => {
   const editableFields = isEditing
-    ? [ 'assignedTo', 'dueDate', 'loggedHours', 'status', 'comments']
+    ? ['assignedTo', 'dueDate', 'loggedHours', 'status', 'comments']
     : ['taskType', 'projectName', 'assignee', 'assignedTo', 'dueDate', 'budgetHours', 'status'];
- 
-  return (
-   /* <section className='bg-white dark:bg-gray-900 min-h-screen'>
-      <div className="flex flex-col items-center justify-center px-6 py-8 mx-auto ">
-        <div className="flex items-center mb-6 text-2xl font-semibold text-gray-900 dark:text-white">ADD TASK</div>
 
-        <div className="w-full bg-white rounded-lg shadow dark:border md:mt-0 sm:max-w-md xl:p-0 dark:bg-gray-800 dark:border-gray-700">
-         <div className="p-6 space-y-4 md:space-y-6 sm:p-8"> 
-        */
-         
-    <form className="space-y-4 md:space-y-6" onSubmit={handleSubmit}>
+  return (
+    <form onSubmit={handleSubmit} className="bg-white shadow-lg rounded-lg px-8 pt-6 pb-8 mb-4">
       {editableFields.map((key) => (
-        <div key={key} className="mb-4">
-          <label htmlFor={key} className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
+        <div key={key} className="mb-6">
+          <label htmlFor={key} className="block text-lg font-semibold text-gray-800 mb-2">
             {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
           </label>
-          {key === 'comments' ? (
+          {key === 'status' ? (
+            <select
+              id={key}
+              value={formData[key]}
+              onChange={handleChange}
+              className="bg-blue-50 border border-blue-300 text-blue-900 text-lg rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-3"
+            >
+              <option value="TO-DO">TO-DO</option>
+              <option value="In-Progress">In-Progress</option>
+              <option value="Complete">Complete</option>
+              <option value="Done">Done</option>
+            </select>
+          ) : key === 'comments' ? (
             <textarea
               id={key}
               value={formData[key]}
               onChange={handleChange}
-              className="border border-gray-300 rounded p-2 w-full"
+              className="bg-green-50 border border-green-300 text-green-900 text-lg rounded-lg focus:ring-green-500 focus:border-green-500 block w-full p-3"
+              placeholder="Add your comments here..."
             />
           ) : (
             <input
@@ -34,23 +38,17 @@ const TaskForm = ({ formData, handleChange, handleSubmit, isEditing, showForm })
               id={key}
               value={formData[key]}
               onChange={handleChange}
-              className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-green-500 dark:focus:border-green-500" 
+              className="bg-blue-50 border border-blue-600 text-yellow-900 text-lg rounded-lg focus:ring-yellow-500 focus:border-yellow-500 block w-full p-3"
+              placeholder={`Enter ${key.replace(/([A-Z])/g, ' $1').toLowerCase()}`}
             />
           )}
         </div>
       ))}
-      <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700">
+      <button type="submit" className="bg-purple-500 text-white text-lg px-6 py-3 rounded-lg hover:bg-purple-700 transition duration-300 ease-in-out">
         {isEditing ? 'Update' : 'Add Item'}
       </button>
-      
+      <button className="bg-purple-500 text-white text-lg px-6 py-3 rounded-lg hover:bg-purple-700 transition duration-300 ease-in-out" onClick={handleCancel}>Cancel</button>
     </form>
-
-    
-
-   /* </div>
-        </div>
-      </div>
-    </section> */
   );
 };
 
