@@ -46,7 +46,7 @@ userModel.pre('save',async function (next) {
 userModel.methods = {
     jwtToken() {
         return JWT.sign(
-            { id: this._id,email:this.email,username:this.username,role:this.role},
+            { id: this._id,email:this.email,username:this.name,role:this.role},
             process.env.SECRET,
             { expiresIn: '24h' })
     }

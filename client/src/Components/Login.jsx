@@ -16,7 +16,7 @@ function Login() {
         e.preventDefault()
         const { email, password } = data;
         try {
-            const { data } = await axios.post('/login', {
+            const { data } = await axios.post('/user/login', {
                 email, password
             });
             if (data.error) {
