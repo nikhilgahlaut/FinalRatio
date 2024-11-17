@@ -8,9 +8,9 @@ function Home() {
   const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   const [services, setServices] = useState([]);
   const [progressData, setProgressData] = useState({});
-  const [currentMonthIndex, setCurrentMonthIndex] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeServices, setActiveServices] = useState({});
+  const [quarterIndex, setQuarterIndex] = useState(0);
 
   const fetchServices = async () => {
     try {
@@ -28,10 +28,9 @@ function Home() {
   useEffect(() => {
     fetchServices();
 
-    // Set current month index to start of the current quarter
+    // Set current quarter index based on current month
     const currentMonth = new Date().getMonth();
-    const quarterStart = Math.floor(currentMonth / 3) * 3;
-    setCurrentMonthIndex(quarterStart);
+    setQuarterIndex(Math.floor(currentMonth / 3));
   }, []);
 
   const handleSliderChange = (month, service, value) => {
@@ -69,10 +68,19 @@ function Home() {
     setIsModalOpen(!isModalOpen);
   };
 
-  const displayedMonths = months.slice(currentMonthIndex, currentMonthIndex + 3);
-  const currentMonth = new Date().getMonth();
+  const displayedMonths = months.slice(quarterIndex * 3, quarterIndex * 3 + 3);
 
   const hasActiveServices = Object.keys(activeServices).length > 0;
+
+  const currentMonth = new Date().getMonth();
+
+  const handlePreviousQuarter = () => {
+    setQuarterIndex((prev) => Math.max(prev - 1, 0));
+  };
+
+  const handleNextQuarter = () => {
+    setQuarterIndex((prev) => Math.min(prev + 1, 3));
+  };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-white dark:bg-gray-900 dark:text-white relative">
@@ -127,62 +135,81 @@ function Home() {
 
       {/* Grid Section */}
       {hasActiveServices && (
-        <div className="grid grid-cols-[auto_repeat(3,_1fr)] gap-2 w-full max-w-4xl border border-gray-300 dark:border-gray-700 rounded-lg shadow-md overflow-hidden">
-          {/* Month Headers */}
-          <div className="bg-gray-200 dark:bg-gray-800 sticky top-0 z-10"></div>
-          {displayedMonths.map((month) => (
-            <div key={month} className="bg-gray-200 dark:bg-gray-800 text-center font-semibold py-2">
-              {month}
-            </div>
-          ))}
+        <>
+          <div className="flex justify-between items-center w-full max-w-4xl mb-4">
+            <button
+              onClick={handlePreviousQuarter}
+              disabled={quarterIndex === 0}
+              className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
+            >
+              Previous Quarter
+            </button>
+            <button
+              onClick={handleNextQuarter}
+              disabled={quarterIndex === 3}
+              className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
+            >
+              Next Quarter
+            </button>
+          </div>
 
-          {/* Service Rows */}
-          {Object.keys(activeServices).map((service) => (
-            <>
-              {/* Service Name */}
-              <div
-                key={service}
-                className="bg-gray-300 dark:bg-gray-800 font-semibold py-2 px-4 text-center"
-              >
-                {service}
+          <div className="grid grid-cols-[auto_repeat(3,_1fr)] gap-2 w-full max-w-4xl border border-gray-300 dark:border-gray-700 rounded-lg shadow-md overflow-hidden">
+            {/* Month Headers */}
+            <div className="bg-gray-200 dark:bg-gray-800 sticky top-0 z-10"></div>
+            {displayedMonths.map((month) => (
+              <div key={month} className="bg-gray-200 dark:bg-gray-800 text-center font-semibold py-2">
+                {month}
               </div>
+            ))}
 
-              {/* Progress Data */}
-              {displayedMonths.map((month) => (
+            {/* Service Rows */}
+            {Object.keys(activeServices).map((service) => (
+              <>
+                {/* Service Name */}
                 <div
-                  key={`${service}-${month}`}
-                  className="flex items-center justify-center bg-white dark:bg-gray-900 p-2 border border-gray-300 dark:border-gray-700"
+                  key={service}
+                  className="bg-gray-300 dark:bg-gray-800 font-semibold py-2 px-4 text-center"
                 >
-                  <div className="text-center">
-                    <span>{progressData[month]?.[service] || 0}%</span>
-                    <input
-                      type="range"
-                      min="0"
-                      max="100"
-                      step="5"
-                      value={progressData[month]?.[service] || 0}
-                      onChange={(e) =>
-                        handleSliderChange(month, service, parseInt(e.target.value))
-                      }
-                      className="mt-2 w-full"
-                      style={{
-                        background: `linear-gradient(to right, ${months.indexOf(month) >= currentMonth - 1 &&
-                            months.indexOf(month) <= currentMonth
-                            ? "green"
-                            : "gray"
-                          } ${progressData[month]?.[service] || 0}%, #e0e0e0 0%)`,
-                      }}
-                      disabled={
-                        months.indexOf(month) < currentMonth - 1 ||
-                        months.indexOf(month) > currentMonth
-                      }
-                    />
-                  </div>
+                  {service}
                 </div>
-              ))}
-            </>
-          ))}
-        </div>
+
+                {/* Progress Data */}
+                {displayedMonths.map((month) => (
+                  <div
+                    key={`${service}-${month}`}
+                    className="flex items-center justify-center bg-white dark:bg-gray-900 p-2 border border-gray-300 dark:border-gray-700"
+                  >
+                    <div className="text-center">
+                      <span>{progressData[month]?.[service] || 0}%</span>
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        step="5"
+                        value={progressData[month]?.[service] || 0}
+                        onChange={(e) =>
+                          handleSliderChange(month, service, parseInt(e.target.value))
+                        }
+                        className= {`w-full mt-2 ${months.indexOf(month) < currentMonth - 1 || months.indexOf(month) > currentMonth ? "cursor-not-allowed opacity-50" : ""}`}
+                        style={{
+                          background: `linear-gradient(to right, ${months.indexOf(month) >= currentMonth - 1 &&
+                              months.indexOf(month) <= currentMonth
+                              ? "green"
+                              : "gray"
+                            } ${progressData[month]?.[service] || 0}%, #e0e0e0 0%)`,
+                        }}
+                        disabled={
+                          months.indexOf(month) < currentMonth - 1 ||
+                          months.indexOf(month) > currentMonth
+                        }
+                      />
+                    </div>
+                  </div>
+                ))}
+              </>
+            ))}
+          </div>
+        </>
       )}
     </div>
   );
