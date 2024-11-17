@@ -8,6 +8,6 @@ router.get('/',home)
 router.post('/signup',signUpDataValidate,signup)
 router.post('/login',loginDataValidate,logIn)
 router.get('/authuser/', jwtAuth, authUser)//user authentication
-router.get('/logOut/',jwtAuth,logout)
+router.get('/logout/',jwtAuth,logout)
 
 module.exports  = router
