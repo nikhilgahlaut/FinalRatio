@@ -65,7 +65,7 @@ function LandingPage() {
                     <div className="grid items-center grid-cols-1 gap-12 lg:grid-cols-2">
                         <div>
                             <p className="text-base font-semibold tracking-wider text-green-600 uppercase">A social media for learners</p>
-                            <h1 className="mt-4 text-4xl font-bold text-black lg:mt-8 sm:text-6xl xl:text-8xl dark:text-white">{`${greet},`}</h1>
+                            <h1 className="mt-4 text-4xl font-bold text-black lg:mt-8 sm:text-6xl xl:text-8xl dark:text-white">{isLoggedIn && `${greet},`}</h1>
                             <h1 className="mt-4 text-2xl font-bold text-black lg:mt-8 sm:text-6xl xl:text-4xl dark:text-white">{isLoggedIn && `${username}`}</h1>
                             <h2 className="mt-4 text-4xl text-black dark:text-white lg:mt-8 sm:text-xl xl:text-4xl">{isLoggedIn ? 'Welcome back!' : ''}</h2>
 
