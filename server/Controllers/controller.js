@@ -146,9 +146,9 @@ exports.getUsersByStatus = async (req, res) => {
     try {
       let users;
       if (statusType === 'undefined') {
-        users = await userModel.find({ status: 'undefined' });
+        users = await userModel.find({ role: 'undefined' }).select('name email');
       } else if (statusType === 'defined') {
-        users = await userModel.find({ status: { $ne: 'undefined' } });
+        users = await userModel.find({ role: { $ne: 'undefined' } });
       } else {
         return res.status(400).send('Invalid status type');
       }

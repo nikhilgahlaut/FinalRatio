@@ -6,7 +6,7 @@ const{home,logIn,logout,signup,authUser,updateAccess,getUsersByStatus}= require(
 const router = express.Router()
 router.get('/',home)
 router.post('/updateAccess',updateAccess)//user Authorization
-router.get('/users/access/:statusType',getUsersByStatus)//user Authorization
+router.get('/access/:statusType',getUsersByStatus)//user Authorization
 router.post('/signup',signUpDataValidate,signup)
 router.post('/login',loginDataValidate,logIn)
 router.get('/authuser', jwtAuth, authUser)//user authentication

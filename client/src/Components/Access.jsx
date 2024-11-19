@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect} from 'react';
+import axios from 'axios';
 import Select from 'react-select';
 
 function Access() {
@@ -8,18 +9,60 @@ function Access() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [selectedUserType, setSelectedUserType] = useState('');
   const [selectedProjects, setSelectedProjects] = useState([]);
-  const [users, setUsers] = useState([
-    { name: 'John Doe', email: 'john.doe@example.com' },
-    { name: 'Test User', email: 'test.user@example.com' },
-    { name: 'Another User Doe', email: 'another.user@example.com' },
-  ]);
+  const [usersUndefined, setUsersUndefined] = useState([]);
+  const [isLoading, setIsLoading] = useState(true); // For loading state
+  const [error, setError] = useState(null); // For error state
+  const [usersDefined, setUsersDefined] = useState([]);
+  const [isLoading2, setIsLoading2] = useState(true); // For loading state
+  const [error2, setError2] = useState(null); // For error state
+
+  // const [users, setUsers] = useState([
+  //   { name: 'John Doe', email: 'john.doe@example.com' },
+  //   { name: 'Test User', email: 'test.user@example.com' },
+  //   { name: 'Another User Doe', email: 'another.user@example.com' },
+  // ]);
   const projects = [
     { value: 'Project A', label: 'Project A' },
     { value: 'Project B', label: 'Project B' },
     { value: 'Project C', label: 'Project C' },
   ];
 
-  const filteredUsers = users.filter(user =>
+  // Fetch users from the API
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        setIsLoading(true);
+        const response = await axios.get('user/access/undefined'); // Adjust the endpoint as needed
+        setUsersUndefined(response.data);
+      } catch (err) {
+        console.error('Error fetching users:', err);
+        setError('Failed to fetch users. Please try again.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUsers();
+  }, []);
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        setIsLoading2(true);
+        const response = await axios.get('user/access/defined'); // Adjust the endpoint as needed
+        setUsersDefined(response.data);
+      } catch (err) {
+        console.error('Error fetching users:', err);
+        setError2('Failed to fetch users. Please try again.');
+      } finally {
+        setIsLoading2(false);
+      }
+    };
+
+    fetchUsers();
+  }, []);
+
+  const filteredUsers = usersUndefined.filter(user =>
     user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     user.email.toLowerCase().includes(searchQuery.toLowerCase())
   );
