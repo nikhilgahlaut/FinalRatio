@@ -121,37 +121,33 @@ exports.logout = (req, res) => {
 }
 
 exports.updateAccess = async (req, res) => {
-    const { email, usertype } = req.body;
+    const { email, usertype, projectList } = req.body;
     try {
-        const user = await userModel.findOneAndUpdate(
-          { email: email },
-          { role: usertype },
-          { new: true }
-        );
-    
-        if (!user) {
-          return res.status(404).send('User not found');
-        }
-    
-        res.send(user);
-      } catch (error) {
-        console.log(Error);
-        res.status(500).send('Server error');
+      const user = await userModel.findOneAndUpdate(
+        { email },
+        { role: usertype, projects: projectList }, // Update role and projects
+        { new: true } // Return the updated document
+      );
+  
+      if (!user) {
+        return res.status(404).send('User not found');
       }
-}
+  
+      res.send(user);
+    } catch (error) {
+      console.error(error);
+      res.status(500).send('Server error');
+    }
+  };
+  
+  
 
 exports.getUsersByStatus = async (req, res) => {
     const { statusType } = req.params;
   
     try {
       let users;
-      if (statusType === 'undefined') {
-        users = await userModel.find({ role: 'undefined' }).select('name email');
-      } else if (statusType === 'defined') {
-        users = await userModel.find({ role: { $ne: 'undefined' } });
-      } else {
-        return res.status(400).send('Invalid status type');
-      }
+      users = await userModel.find({}, 'name email role wbs');
   
       if (users.length === 0) {
         return res.status(404).send('No users found');

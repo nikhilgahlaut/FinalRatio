@@ -1,4 +1,4 @@
-import React, { useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Select from 'react-select';
 
@@ -9,18 +9,10 @@ function Access() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [selectedUserType, setSelectedUserType] = useState('');
   const [selectedProjects, setSelectedProjects] = useState([]);
-  const [usersUndefined, setUsersUndefined] = useState([]);
-  const [isLoading, setIsLoading] = useState(true); // For loading state
-  const [error, setError] = useState(null); // For error state
-  const [usersDefined, setUsersDefined] = useState([]);
-  const [isLoading2, setIsLoading2] = useState(true); // For loading state
-  const [error2, setError2] = useState(null); // For error state
+  const [users, setUsers] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // const [users, setUsers] = useState([
-  //   { name: 'John Doe', email: 'john.doe@example.com' },
-  //   { name: 'Test User', email: 'test.user@example.com' },
-  //   { name: 'Another User Doe', email: 'another.user@example.com' },
-  // ]);
   const projects = [
     { value: 'Project A', label: 'Project A' },
     { value: 'Project B', label: 'Project B' },
@@ -32,8 +24,8 @@ function Access() {
     const fetchUsers = async () => {
       try {
         setIsLoading(true);
-        const response = await axios.get('user/access/undefined'); // Adjust the endpoint as needed
-        setUsersUndefined(response.data);
+        const response = await axios.get('/user/access/getUsers'); // Adjust the endpoint
+        setUsers(response.data);
       } catch (err) {
         console.error('Error fetching users:', err);
         setError('Failed to fetch users. Please try again.');
@@ -45,51 +37,76 @@ function Access() {
     fetchUsers();
   }, []);
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        setIsLoading2(true);
-        const response = await axios.get('user/access/defined'); // Adjust the endpoint as needed
-        setUsersDefined(response.data);
-      } catch (err) {
-        console.error('Error fetching users:', err);
-        setError2('Failed to fetch users. Please try again.');
-      } finally {
-        setIsLoading2(false);
-      }
-    };
+  const definedUsers = users.filter(
+    (user) => user.role !== 'undefined' && user.role !== 'app_admin'
+  );
+  const undefinedUsers = users.filter((user) => user.role === 'undefined');
 
-    fetchUsers();
-  }, []);
+  const filteredUsersDefined = definedUsers.filter(
+    (user) =>
+      (user.name && user.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (user.email && user.email.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
 
-  const filteredUsers = usersUndefined.filter(user =>
-    user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredUsersUndefined = undefinedUsers.filter(
+    (user) =>
+      (user.name && user.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (user.email && user.email.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   const openModal = (user) => {
+    console.log('Opening modal for user:', user); // Debugging log
     setSelectedUser(user);
-    setSelectedUserType(''); // Reset user type selection when opening the modal
-    setSelectedProjects([]); // Reset selected projects when opening the modal
+    setSelectedUserType(user.role || ''); // Prepopulate role
+    setSelectedProjects(
+      user.wbs 
+        ? user.wbs.map((project) => ({ value: project, label: project })) 
+        : []
+    );
     setIsModalOpen(true);
   };
+  
 
   const closeModal = () => {
     setIsModalOpen(false);
     setSelectedUser(null);
-  };
-
-  const handleReject = () => {
-    setUsers(users.filter(user => user !== selectedUser));
-    closeModal();
+    setSelectedUserType('');
+    setSelectedProjects([]);
   };
 
   const handleProjectChange = (selectedOptions) => {
     setSelectedProjects(selectedOptions || []);
   };
 
-  const removeProject = (project) => {
-    setSelectedProjects(selectedProjects.filter(p => p.value !== project.value));
+  const handleUpdateAccess = async () => {
+    if (!selectedUserType) {
+      alert('Please select a user type.');
+      return;
+    }
+
+    try {
+      const updatedUser = {
+        email: selectedUser.email,
+        usertype: selectedUserType,
+        projectList: selectedProjects.map((project) => project.value),
+      };
+
+      const response = await axios.put('/user/access/updateAccess', updatedUser);
+
+      setUsers(
+        users.map((user) =>
+          user.email === selectedUser.email
+            ? { ...user, role: response.data.role, projects: response.data.projects }
+            : user
+        )
+      );
+
+      alert('Access updated successfully.');
+      closeModal();
+    } catch (err) {
+      console.error('Error updating access:', err);
+      alert('Failed to update access. Please try again.');
+    }
   };
 
   return (
@@ -97,13 +114,19 @@ function Access() {
       <div className="flex border-b">
         <button
           className={`p-4 ${key === 'New' ? 'border-b-2 border-purple-500' : ''}`}
-          onClick={() => setKey('New')}
+          onClick={() => {
+            setKey('New');
+            setSearchQuery('');
+          }}
         >
           New Access
         </button>
         <button
           className={`p-4 ${key === 'Existing' ? 'border-b-2 border-purple-500' : ''}`}
-          onClick={() => setKey('Existing')}
+          onClick={() => {
+            setKey('Existing');
+            setSearchQuery('');
+          }}
         >
           Existing Access
         </button>
@@ -118,10 +141,10 @@ function Access() {
                 className="w-full p-2 mb-4 border rounded"
                 placeholder="Search by name or email"
                 value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
+                onChange={(e) => setSearchQuery(e.target.value)}
               />
               <ul className="list-none list-inside space-y-2">
-                {filteredUsers.map((user, index) => (
+                {filteredUsersUndefined.map((user, index) => (
                   <li
                     key={index}
                     className="text-gray-700 hover:bg-gray-100 p-2 rounded cursor-pointer"
@@ -135,7 +158,33 @@ function Access() {
             </div>
           </div>
         )}
-        {key === 'Existing' && <div>Tab content for Existing Access</div>}
+        {key === 'Existing' && (
+          <div>
+            <div className="max-w-md mx-auto bg-white rounded-lg shadow-md p-6">
+              <input
+                type="text"
+                id="searchBox"
+                className="w-full p-2 mb-4 border rounded"
+                placeholder="Search by name or email"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              <ul className="list-none list-inside space-y-2">
+                {filteredUsersDefined.map((user, index) => (
+                  <li
+                    key={index}
+                    className="text-gray-700 hover:bg-gray-100 p-2 rounded cursor-pointer"
+                    onClick={() => openModal(user)}
+                  >
+                    <span className="block text-lg font-bold">{user.name}</span>
+                    <span className="block text-sm text-gray-500">{user.email}</span>
+                    <span className="block text-sm text-gray-400">{user.role}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        )}
       </div>
 
       {isModalOpen && selectedUser && (
@@ -151,12 +200,14 @@ function Access() {
             <p className="mb-2"><strong>Name:</strong> {selectedUser.name}</p>
             <p className="mb-4"><strong>Email:</strong> {selectedUser.email}</p>
             <div className="mb-4">
-              <label htmlFor="userType" className="block text-sm font-medium text-gray-700 mb-2">User Type</label>
+              <label htmlFor="userType" className="block text-sm font-medium text-gray-700 mb-2">
+                User Type
+              </label>
               <select
                 id="userType"
                 className="w-full p-2 border rounded"
                 value={selectedUserType}
-                onChange={e => setSelectedUserType(e.target.value)}
+                onChange={(e) => setSelectedUserType(e.target.value)}
               >
                 <option value="">Select User Type</option>
                 <option value="Staff">Staff</option>
@@ -165,7 +216,9 @@ function Access() {
               </select>
             </div>
             <div className="mb-4">
-              <label htmlFor="projects" className="block text-sm font-medium text-gray-700 mb-2">Projects</label>
+              <label htmlFor="projects" className="block text-sm font-medium text-gray-700 mb-2">
+                Projects
+              </label>
               <Select
                 id="projects"
                 isMulti
@@ -175,36 +228,18 @@ function Access() {
                 className="w-full"
               />
             </div>
-            {/* {selectedProjects.length > 0 && (
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Selected Projects</label>
-                <div className="flex flex-wrap">
-                  {selectedProjects.map((project, index) => (
-                    <div key={index} className="flex items-center bg-gray-200 text-gray-700 rounded-full px-3 py-1 mr-2 mb-2">
-                      <span className="mr-2">{project.label}</span>
-                      <button
-                        className="text-gray-500 hover:text-gray-700"
-                        onClick={() => removeProject(project)}
-                      >
-                        &times;
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )} */}
             <div className="flex justify-end space-x-4">
               <button
                 className="bg-green-500 text-white px-4 py-2 rounded"
-                onClick={closeModal}
+                onClick={handleUpdateAccess}
               >
                 Accept
               </button>
               <button
                 className="bg-red-500 text-white px-4 py-2 rounded"
-                onClick={handleReject}
+                onClick={closeModal}
               >
-                Reject
+                Cancel
               </button>
             </div>
           </div>
