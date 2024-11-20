@@ -12,6 +12,7 @@ function Home() {
   const [activeServices, setActiveServices] = useState({});
   const [quarterIndex, setQuarterIndex] = useState(0);
 
+  // Fetch available services from backend
   const fetchServices = async () => {
     try {
       const response = await axios.get("http://localhost:5000/services/allservices");
@@ -25,14 +26,60 @@ function Home() {
     }
   };
 
-  useEffect(() => {
-    fetchServices();
+  // Fetch user services from backend when user logs in
+  const fetchUserServices = async () => {
+    try {
+      const response = await axios.get("http://localhost:5000/client/clientData");
+      if (response.data.success) {
+        const user = response.data.data.find((client) => client.proj_id === 1); // Replace 1 with dynamic user proj_id
+        if (user) {
+          setActiveServices(
+            user.servicesOptedFor.reduce((acc, service) => {
+              acc[service] = true;
+              return acc;
+            }, {})
+          );
+        }
+      }
+    } catch (error) {
+      console.error("Failed to fetch user services", error);
+    }
+  };
 
-    // Set current quarter index based on current month
-    const currentMonth = new Date().getMonth();
-    setQuarterIndex(Math.floor(currentMonth / 3));
-  }, []);
+  // Handle service toggle in the settings modal
+  const handleChange = async (checked, serviceName) => {
+    setActiveServices((prev) => {
+      const updatedServices = { ...prev };
+      if (checked) {
+        updatedServices[serviceName] = true;
+      } else {
+        delete updatedServices[serviceName];
+      }
 
+      // Save updated services to backend
+      saveServicesToBackend(Object.keys(updatedServices));
+
+      return updatedServices;
+    });
+  };
+
+  // Save updated services to the backend
+  const saveServicesToBackend = async (services) => {
+    try {
+      const response = await axios.post("http://localhost:5000/client/updateServices", {
+        proj_id: 1, // Replace with dynamic user proj_id
+        servicesOptedFor: services,
+      });
+
+      if (!response.data.success) {
+        console.error("Failed to update services");
+      }
+    } catch (error) {
+      console.error("Error updating services", error);
+    }
+  };
+
+  // Handle month slider change for progress
   const handleSliderChange = (month, service, value) => {
     setProgressData((prevData) => ({
       ...prevData,
@@ -43,30 +90,19 @@ function Home() {
     }));
   };
 
-  const handleChange = (checked, serviceName) => {
-    setActiveServices((prev) => {
-      const updatedServices = { ...prev };
-      if (checked) {
-        updatedServices[serviceName] = true;
-      } else {
-        delete updatedServices[serviceName];
-        setProgressData((prevData) => {
-          const updatedProgressData = { ...prevData };
-          for (const month in updatedProgressData) {
-            if (updatedProgressData[month][serviceName]) {
-              delete updatedProgressData[month][serviceName];
-            }
-          }
-          return updatedProgressData;
-        });
-      }
-      return updatedServices;
-    });
-  };
-
+  // Open/close the settings modal
   const settingFn = () => {
     setIsModalOpen(!isModalOpen);
   };
+
+  // Set current quarter index based on the current month
+  useEffect(() => {
+    fetchServices();
+    fetchUserServices();
+
+    const currentMonth = new Date().getMonth();
+    setQuarterIndex(Math.floor(currentMonth / 3));
+  }, []);
 
   const displayedMonths = months.slice(quarterIndex * 3, quarterIndex * 3 + 3);
 
@@ -121,7 +157,7 @@ function Home() {
         </div>
       )}
 
-      {/* Display "No Services Opted" message if no service is active */}
+      {/* No services message */}
       {!hasActiveServices && (
         <div className="flex flex-col items-center justify-center space-y-4">
           <h2 className="text-2xl font-bold text-gray-600 dark:text-gray-400">
@@ -133,7 +169,7 @@ function Home() {
         </div>
       )}
 
-      {/* Grid Section */}
+      {/* Services grid */}
       {hasActiveServices && (
         <>
           <div className="flex justify-between items-center w-full max-w-4xl mb-4">
@@ -190,13 +226,18 @@ function Home() {
                         onChange={(e) =>
                           handleSliderChange(month, service, parseInt(e.target.value))
                         }
-                        className= {`w-full mt-2 ${months.indexOf(month) < currentMonth - 1 || months.indexOf(month) > currentMonth ? "cursor-not-allowed opacity-50" : ""}`}
+                        className={`w-full mt-2 ${
+                          months.indexOf(month) < currentMonth - 1 || months.indexOf(month) > currentMonth
+                            ? "cursor-not-allowed opacity-50"
+                            : ""
+                        }`}
                         style={{
-                          background: `linear-gradient(to right, ${months.indexOf(month) >= currentMonth - 1 &&
-                              months.indexOf(month) <= currentMonth
+                          background: `linear-gradient(to right, ${
+                            months.indexOf(month) >= currentMonth - 1 &&
+                            months.indexOf(month) <= currentMonth
                               ? "green"
                               : "gray"
-                            } ${progressData[month]?.[service] || 0}%, #e0e0e0 0%)`,
+                          } ${progressData[month]?.[service] || 0}%, #e0e0e0 0%)`,
                         }}
                         disabled={
                           months.indexOf(month) < currentMonth - 1 ||

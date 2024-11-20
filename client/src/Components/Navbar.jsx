@@ -1,39 +1,37 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie'; // For cookie management
-import { jwtDecode } from 'jwt-decode'; // For decoding the JWT
-
+import {jwtDecode} from 'jwt-decode'; // For decoding the JWT
 import axios from 'axios';
 
 function Navbar() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
-
     const navigate = useNavigate();
 
-    // Check for token on component mount
+    // Check for token on component mount and whenever the token changes
     useEffect(() => {
+        checkLoginStatus(); // Check login status when the component is mounted
+    }, []); // Empty dependency array so it runs only once on mount
+
+    const checkLoginStatus = () => {
         const token = Cookies.get('token'); // Retrieve JWT token from cookies
-        console.log(`navbar token : ${token}`)
         if (token) {
             try {
                 const decoded = jwtDecode(token); // Decode the token
-                console.log('Decoded JWT:', decoded); // Optional: View decoded token in console
-                //retrive username
                 if (decoded) {
                     setIsLoggedIn(true); // Set user as logged in if token is valid
-                }
-                else {
+                } else {
                     setIsLoggedIn(false);
                 }
-
-
             } catch (error) {
                 console.error('Invalid JWT:', error); // Handle decoding error
                 setIsLoggedIn(false);
             }
+        } else {
+            setIsLoggedIn(false);
         }
-    }, []);
+    };
 
     const toggleMenu = () => {
         setIsMenuOpen(!isMenuOpen);
@@ -42,7 +40,7 @@ function Navbar() {
     const handleLogout = async () => {
         try {
             // Call logout API using GET request to remove token from cookie
-            const response = await axios.get('/user/logout', {
+            const response = await axios.get('http://localhost:5000/user/logout', {
                 withCredentials: true, // Make sure the cookie is included in the request
             });
 
@@ -50,7 +48,7 @@ function Navbar() {
                 // Remove token from cookies after logout
                 Cookies.remove('token');
 
-                // Update the login state
+                // Update the login state immediately after logout
                 setIsLoggedIn(false);
 
                 // Navigate to the login page
@@ -105,30 +103,32 @@ function Navbar() {
                                 Home
                             </Link>
                         </li>
-                        {!isLoggedIn && (
+                        {!isLoggedIn ? (
+                            <>
+                                <li>
+                                    <Link
+                                        to={'/signup'}
+                                        className="block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-green-700 md:p-0 dark:text-white md:dark:hover:text-green-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent">
+                                        Register
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link
+                                        to={'/login'}
+                                        className="block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-green-700 md:p-0 dark:text-white md:dark:hover:text-green-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent">
+                                        Login
+                                    </Link>
+                                </li>
+                            </>
+                        ) : (
                             <li>
-                                <Link
-                                    to={'/signup'}
-                                    className="block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-green-700 md:p-0 dark:text-white md:dark:hover:text-green-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent">
-                                    Register
-                                </Link>
-                            </li>
-                        )}
-                        <li>
-                            {!isLoggedIn ? (
-                                <Link
-                                    to={'/login'}
-                                    className="block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-green-700 md:p-0 dark:text-white md:dark:hover:text-green-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent">
-                                    Login
-                                </Link>
-                            ) : (
                                 <button
                                     onClick={handleLogout}
                                     className="block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-green-700 md:p-0 dark:text-white md:dark:hover:text-green-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent">
                                     Logout
                                 </button>
-                            )}
-                        </li>
+                            </li>
+                        )}
                     </ul>
                 </div>
             </div>

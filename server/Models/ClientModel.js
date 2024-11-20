@@ -12,7 +12,8 @@ const clientModel = new mongoose.Schema({
     },
     servicesOptedFor:{
         required:true,
-        type:[String],
+        type:[String], 
+        default: [] ,
     },
     dateAdded: {
         type: Date,
@@ -20,5 +21,6 @@ const clientModel = new mongoose.Schema({
     },
 
 })
+
 
 module.exports = new mongoose.model('clientModel',clientModel)
