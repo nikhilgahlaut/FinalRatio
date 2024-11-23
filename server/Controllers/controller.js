@@ -125,7 +125,7 @@ exports.updateAccess = async (req, res) => {
     try {
       const user = await userModel.findOneAndUpdate(
         { email },
-        { role: usertype, projects: projectList }, // Update role and projects
+        { role: usertype, wbs: projectList }, // Update role and projects
         { new: true } // Return the updated document
       );
   

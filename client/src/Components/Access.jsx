@@ -12,12 +12,15 @@ function Access() {
   const [users, setUsers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [projects, setProjects] = useState([]);
+  const [isFetchingProjects, setIsFetchingProjects] = useState(false); // Loading state for projects
+  
 
-  const projects = [
-    { value: 'Project A', label: 'Project A' },
-    { value: 'Project B', label: 'Project B' },
-    { value: 'Project C', label: 'Project C' },
-  ];
+  // const projects = [
+  //   { value: 'Project A', label: 'Project A' },
+  //   { value: 'Project B', label: 'Project B' },
+  //   { value: 'Project C', label: 'Project C' },
+  // ];
 
   // Fetch users from the API
   useEffect(() => {
@@ -35,6 +38,27 @@ function Access() {
     };
 
     fetchUsers();
+  }, []);
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        setIsFetchingProjects(true);
+        const response = await axios.get('/client/clientData');
+        const formattedProjects = response.data.data.map((project) => ({
+          value: project.proj_name,
+          label: project.proj_name,
+        }));
+        setProjects(formattedProjects);
+      } catch (err) {
+        console.error('Error fetching projects:', err);
+        setError('Failed to fetch projects. Please try again.');
+      } finally {
+        setIsFetchingProjects(false);
+      }
+    };
+
+    fetchProjects();
   }, []);
 
   const definedUsers = users.filter(
@@ -85,13 +109,14 @@ function Access() {
     }
 
     try {
+      console.log('Selected projects:', selectedProjects.map((project) => project.value));
       const updatedUser = {
         email: selectedUser.email,
         usertype: selectedUserType,
         projectList: selectedProjects.map((project) => project.value),
       };
 
-      const response = await axios.put('/user/access/updateAccess', updatedUser);
+      const response = await axios.post('/user/updateAccess', updatedUser);
 
       setUsers(
         users.map((user) =>
@@ -132,7 +157,13 @@ function Access() {
         </button>
       </div>
       <div className="p-4">
-        {key === 'New' && (
+        {isLoading ? (
+          // Loading Spinner
+          <div className="flex justify-center items-center h-20">
+            <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-purple-500"></div>
+          </div>
+        ) : key === 'New' ? (
+          // New Access Tab
           <div>
             <div className="max-w-md mx-auto bg-white rounded-lg shadow-md p-6">
               <input
@@ -157,8 +188,8 @@ function Access() {
               </ul>
             </div>
           </div>
-        )}
-        {key === 'Existing' && (
+        ) : (
+          // Existing Access Tab
           <div>
             <div className="max-w-md mx-auto bg-white rounded-lg shadow-md p-6">
               <input
@@ -187,6 +218,7 @@ function Access() {
         )}
       </div>
 
+
       {isModalOpen && selectedUser && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full relative">
@@ -210,9 +242,9 @@ function Access() {
                 onChange={(e) => setSelectedUserType(e.target.value)}
               >
                 <option value="">Select User Type</option>
-                <option value="Staff">Staff</option>
-                <option value="Project Client">Project Client</option>
-                <option value="Project Owner">Project Owner</option>
+                <option value="staff">Staff</option>
+                <option value="proj_client">Project Client</option>
+                <option value="proj_owner">Project Owner</option>
               </select>
             </div>
             <div className="mb-4">
