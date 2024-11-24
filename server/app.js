@@ -8,6 +8,7 @@ const userRoutes = require('./Routes/Routes.js')
 const serviceRoutes = require('./Routes/ServiceRoutes.js')
 const clientRoutes = require('./Routes/ClientRoutes.js')
 const progress = require('./Routes/ProgressRoutes.js')
+const timeTrack = require('./Routes/TimeTracking.js')
 
 app.use(cors({
   origin: 'http://localhost:5173', // Specify the Vite frontend URL
@@ -23,5 +24,6 @@ app.use('/user', userRoutes)
 app.use('/services', serviceRoutes)
 app.use('/client',clientRoutes)
 app.use('/progress',progress)
+app.use('/workTrack',timeTrack)
 
 module.exports = app
