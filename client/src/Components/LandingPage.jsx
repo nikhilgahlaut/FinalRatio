@@ -70,7 +70,7 @@ function LandingPage() {
                             <h2 className="mt-4 text-4xl text-black dark:text-white lg:mt-8 sm:text-xl xl:text-4xl">{isLoggedIn ? 'Welcome back!' : ''}</h2>
 
                             <Link
-                                to={isLoggedIn ? "/dashboard" : "/signup"}
+                                to={isLoggedIn ? "/dashboard" : "/join"}
                                 title=""
                                 className="inline-flex items-center px-6 py-4 mt-8 font-semibold text-black transition-all duration-200 bg-yellow-300 rounded-full lg:mt-16 hover:bg-yellow-400 focus:bg-yellow-400"
                                 role="button"
