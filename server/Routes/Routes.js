@@ -9,8 +9,8 @@ router.post('/updateAccess',updateAccess)//user Authorization
 router.get('/access/getUsers',getUsersByStatus)//user Authorization
 router.post('/signup',signUpDataValidate,signup)
 router.post('/login',loginDataValidate,logIn)
-router.get('/authuser', jwtAuth, authUser)//user authentication
-router.get('/logOut',jwtAuth,logout)
+router.get('/authuser/', jwtAuth, authUser)//user authentication
+router.get('/logOut/',jwtAuth,logout)
 
 
 module.exports  = router

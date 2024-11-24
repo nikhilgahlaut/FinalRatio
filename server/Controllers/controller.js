@@ -60,13 +60,13 @@ exports.logIn = async (req, res) => {
 
         const cookieOption = {
             maxAge: 24 * 60 * 60 * 1000,
-            httpOnly: true
         }
 
         res.cookie("token", token, cookieOption)
         res.status(200).json({
             success: true,
-            message: 'login success!!'
+            message: 'login success!!',
+            token
         })
 
 
