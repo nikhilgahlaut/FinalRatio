@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie'; // For cookie management
-import {jwtDecode} from 'jwt-decode'; // For decoding the JWT
+import { jwtDecode } from 'jwt-decode'; // For decoding the JWT
 import axios from 'axios';
 
 function Navbar() {
@@ -121,13 +121,25 @@ function Navbar() {
                                 </li>
                             </>
                         ) : (
-                            <li>
-                                <button
-                                    onClick={handleLogout}
+                            <>
+                                <li>
+                                    <button
+                                        onClick={handleLogout}
+                                        className="block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-green-700 md:p-0 dark:text-white md:dark:hover:text-green-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent">
+                                        Logout
+                                    </button>
+                                </li>
+                                <Link
+                                    to={'/access'}
                                     className="block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-green-700 md:p-0 dark:text-white md:dark:hover:text-green-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent">
-                                    Logout
-                                </button>
-                            </li>
+                                    Access
+                                </Link>
+                                <Link
+                                    to={'/work'}
+                                    className="block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-green-700 md:p-0 dark:text-white md:dark:hover:text-green-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent">
+                                    Work
+                                </Link>
+                            </>
                         )}
                     </ul>
                 </div>

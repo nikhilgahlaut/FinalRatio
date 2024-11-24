@@ -25,7 +25,7 @@ const Work = () => {
   const [currentTaskId, setCurrentTaskId] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [showDetails, setShowDetails] = useState(null);
-
+  const [selectedTask, setSelectedTask] = React.useState(null);
   useEffect(() => {
     fetchTasks();
   }, []);
@@ -147,11 +147,13 @@ const Work = () => {
   const { dueToday, dueTomorrow, dueNextWeek, dueLater } = categorizeTasks(filteredTasks);
 
   return (
-    <div className="min-h-screen border-gray-200 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-100">
       {showForm && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 ">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md relative overflow-auto max-h-[90vh]">
-            <h2 className="text-2xl font-bold mb-4">{isEditing ? 'Edit Task' : 'Add New Task'}</h2>
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-md relative overflow-auto max-h-[90vh]">
+            <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+              {isEditing ? 'Edit Task' : 'Add New Task'}
+            </h2>
             <TaskForm
               formData={formData}
               handleChange={handleChange}
@@ -159,143 +161,128 @@ const Work = () => {
               isEditing={isEditing}
               handleCancel={handleCancel}
             />
-           {/* <button className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700 mt-4" onClick={handleCancel}>Cancel</button> */}
           </div>
         </div>
       )}
-      <div className="bg-slate-50 bg-contain min-h-screen">
-        <div className='flex flex-row-reverse flex-wrap bg-slate-600'>
-          <button onClick={() => setShowForm(true)} className="bg-blue-700 hover:bg-blue-900 text-white font-bold py-4 px-4 rounded-full p-1 mr-2">+Add Task</button>
-          <Select
-            isMulti
-            name="assignedTo"
-            options={tasks.map(task => ({ value: task.assignedTo, label: task.assignedTo }))}
-            className="basic-multi-select rounded p-3 mr-2 bg-slate-600"
-            classNamePrefix="select"
-            placeholder="Filter by Assigned To"
-            value={filters.assignedTo}
-            onChange={handleFilterChange}
-          />
-          <Select
-            isMulti
-            name="projectName"
-            options={tasks.map(task => ({ value: task.projectName, label: task.projectName }))}
-            className="basic-multi-select rounded p-3 mr-2 bg-slate-600"
-            classNamePrefix="select"
-            placeholder="Filter by Project"
-            value={filters.projectName}
-            onChange={handleFilterChange}
-          />
-        </div>
-        <h1 className=' font-bold py-2 px-4 text-black'>WORK PAGE</h1>
-        <div className='p-4'>
-          <h2 className="text-xl font-bold text-black mb-2">Due Today</h2>
-          <div className='flex flex-wrap'>
-            {dueToday.map((task, index) => (
-              <div
-                className="bg-white max-w-sm rounded-lg overflow-hidden shadow-lg p-6 border border-gray-200 m-4 cursor-pointer"
-                key={index}
-                onClick={() => handleCardClick(task)}
-              >
-                <h2 className="text-gray-900 font-bold text-xl mb-2">{task.taskType}</h2>
-                <h3 className="text-gray-700 text-base mb-2">{task.projectName}</h3>
-                <div className="text-gray-700 text-sm mb-2">Assigned To: {task.assignedTo}</div>
-                <div className="text-gray-700 text-sm mb-2">Status: {task.status}</div>
-                {showDetails === task._id && (
-                  <div className="mt-4">
-                    <p className="text-gray-700 text-sm mb-2">Due Date: {task.dueDate}</p>
-                    <p className="text-gray-700 text-sm mb-2">Budget Hours: {task.budgetHours}</p>
-                    <p className="text-gray-700 text-sm mb-2">Logged Hours: {task.loggedHours}</p>
-                    <p className="text-gray-700 text-sm mb-2">Updated On: {task.updatedOn}</p>
-                    <p className="text-gray-700 text-sm mb-2">Status: {task.status}</p>
-                    <button className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700 mt-4" onClick={() => handleEdit(task)}>Edit</button>
-                  </div>
-                )}
-              </div>
-            ))}
+      {selectedTask && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-lg relative">
+            <button
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+              onClick={() => setSelectedTask(null)}
+            >
+              ✕
+            </button>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">{selectedTask.taskType}</h2>
+            <div className="space-y-4">
+              <p className="text-gray-700">
+                <span className="font-medium">Project:</span> {selectedTask.projectName}
+              </p>
+              <p className="text-gray-700">
+                <span className="font-medium">Assigned To:</span> {selectedTask.assignedTo}
+              </p>
+              <p className="text-gray-700">
+                <span className="font-medium">Due Date:</span> {selectedTask.dueDate}
+              </p>
+              <p className="text-gray-700">
+                <span className="font-medium">Status:</span> {selectedTask.status}
+              </p>
+              <p className="text-gray-700">
+                <span className="font-medium">Budget Hours:</span> {selectedTask.budgetHours}
+              </p>
+              <p className="text-gray-700">
+                <span className="font-medium">Logged Hours:</span> {selectedTask.loggedHours}
+              </p>
+              <p className="text-gray-700">
+                <span className="font-medium">Updated On:</span> {selectedTask.updatedOn}
+              </p>
+            </div>
+            <button
+              className="bg-blue-500 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg mt-6"
+              onClick={() => {
+                handleEdit(selectedTask);
+                setSelectedTask(null);
+              }}
+            >
+              Edit
+            </button>
           </div>
-
-          <h2 className="text-xl font-bold text-black mb-2">Due Tomorrow</h2>
-          <div className='flex flex-wrap'>
-            {dueTomorrow.map((task, index) => (
-              <div
-                className="bg-white max-w-sm rounded-lg overflow-hidden shadow-lg p-6 border border-gray-200 m-4 cursor-pointer"
-                key={index}
-                onClick={() => handleCardClick(task)}
-              >
-                <h2 className="text-gray-900 font-bold text-xl mb-2">{task.taskType}</h2>
-                <h3 className="text-gray-700 text-base mb-2">{task.projectName}</h3>
-                <div className="text-gray-700 text-sm mb-2">Assigned To: {task.assignedTo}</div>
-                <div className="text-gray-700 text-sm mb-2">Status: {task.status}</div>
-                {showDetails === task._id && (
-                  <div className="mt-4">
-                    <p className="text-gray-700 text-sm mb-2">Due Date: {task.dueDate}</p>
-                    <p className="text-gray-700 text-sm mb-2">Budget Hours: {task.budgetHours}</p>
-                    <p className="text-gray-700 text-sm mb-2">Logged Hours: {task.loggedHours}</p>
-                    <p className="text-gray-700 text-sm mb-2">Updated On: {task.updatedOn}</p>
-                    <p className="text-gray-700 text-sm mb-2">Status: {task.status}</p>
-                    <button className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700 mt-4" onClick={() => handleEdit(task)}>Edit</button>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-
-          <h2 className="text-xl font-bold text-black mb-2">Due Next Week</h2>
-          <div className='flex flex-wrap'>
-  {dueNextWeek.map((task, index) => (
-    <div
-      className="bg-gray-100 max-w-lg rounded-lg overflow-hidden shadow-lg p-8 border border-gray-300 m-4 cursor-pointer transition-transform transform hover:scale-105 hover:shadow-2xl"
-      key={index}
-      onClick={() => handleCardClick(task)}
-    >
-      <h2 className="text-gray-900 font-bold text-2xl mb-2 bg-cyan-400 p-2 rounded-lg">{task.taskType}</h2>
-      <h3 className="text-gray-800 text-xl mb-2">{task.projectName}</h3>
-      <div className="text-gray-700 text-lg mb-2">Assigned To: <span className="font-semibold">{task.assignedTo}</span></div>
-      <div className="text-gray-700 text-lg mb-2">Status: <span className="font-semibold">{task.status}</span></div>
-      {showDetails === task._id && (
-        <div className="mt-4">
-          <p className="text-gray-700 text-lg mb-2">Due Date: <span className="font-semibold">{task.dueDate}</span></p>
-          <p className="text-gray-700 text-lg mb-2">Budget Hours: <span className="font-semibold">{task.budgetHours}</span></p>
-          <p className="text-gray-700 text-lg mb-2">Logged Hours: <span className="font-semibold">{task.loggedHours}</span></p>
-          <p className="text-gray-700 text-lg mb-2">Updated On: <span className="font-semibold">{task.updatedOn}</span></p>
-          <button className="bg-blue-600 text-white px-5 py-3 rounded-lg hover:bg-blue-800 transition duration-200 mt-4" onClick={() => handleEdit(task)}>Edit</button>
         </div>
       )}
-    </div>
-  ))}
-</div>
-
-
-          <h2 className="text-xl font-bold text-black mb-2">Due Later</h2>
-          <div className='flex flex-wrap'>
-            {dueLater.map((task, index) => (
-              <div
-                className="bg-white max-w-sm rounded-lg overflow-hidden shadow-lg p-6 border border-gray-200 m-4 cursor-pointer"
-                key={index}
-                onClick={() => handleCardClick(task)}
-              >
-                <h2 className="text-gray-900 font-bold text-xl mb-2">{task.taskType}</h2>
-                <h3 className="text-gray-700 text-base mb-2">{task.projectName}</h3>
-                <div className="text-gray-700 text-sm mb-2">Assigned To: {task.assignedTo}</div>
-                <div className="text-gray-700 text-sm mb-2">Status: {task.status}</div>
-                {showDetails === task._id && (
-                  <div className="mt-4">
-                    <p className="text-gray-700 text-sm mb-2">Due Date: {task.dueDate}</p>
-                    <p className="text-gray-700 text-sm mb-2">Budget Hours: {task.budgetHours}</p>
-                    <p className="text-gray-700 text-sm mb-2">Logged Hours: {task.loggedHours}</p>
-                    <p className="text-gray-700 text-sm mb-2">Updated On: {task.updatedOn}</p>
-                    <p className="text-gray-700 text-sm mb-2">Status: {task.status}</p>
-                    <button className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700 mt-4" onClick={() => handleEdit(task)}>Edit</button>
-                  </div>
-                )}
-              </div>
-            ))}
+      <div className="bg-gray-50 min-h-screen">
+        <div className="flex flex-wrap items-center justify-between p-4 bg-white shadow-md">
+          <button
+            onClick={() => setShowForm(true)}
+            className="bg-blue-600 hover:bg-blue-800 text-white font-semibold py-2 px-6 rounded-full shadow-lg transition-transform transform hover:scale-105"
+          >
+            + Add Task
+          </button>
+          <div className="flex flex-wrap space-x-2">
+            <Select
+              isMulti
+              name="assignedTo"
+              options={tasks.map((task) => ({
+                value: task.assignedTo,
+                label: task.assignedTo,
+              }))}
+              className="basic-multi-select w-48 rounded-lg"
+              classNamePrefix="select"
+              placeholder="Filter by Assigned To"
+              value={filters.assignedTo}
+              onChange={handleFilterChange}
+            />
+            <Select
+              isMulti
+              name="projectName"
+              options={tasks.map((task) => ({
+                value: task.projectName,
+                label: task.projectName,
+              }))}
+              className="basic-multi-select w-48 rounded-lg"
+              classNamePrefix="select"
+              placeholder="Filter by Project"
+              value={filters.projectName}
+              onChange={handleFilterChange}
+            />
           </div>
+        </div>
+        <div className="p-6">
+          <h1 className="text-3xl font-bold text-gray-900 mb-6">Work Page</h1>
+          {[
+            { title: 'Due Today', tasks: dueToday },
+            { title: 'Due Tomorrow', tasks: dueTomorrow },
+            { title: 'Due Next Week', tasks: dueNextWeek },
+            { title: 'Due Later', tasks: dueLater },
+          ].map(({ title, tasks }, idx) => (
+            <div key={idx} className="mb-8">
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">{title}</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {tasks.map((task, index) => (
+                  <div
+                    className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow border border-gray-200 cursor-pointer"
+                    key={index}
+                    onClick={() => setSelectedTask(task)}
+                  >
+                    <h3 className="text-xl font-semibold text-blue-600 mb-2">
+                      {task.taskType}
+                    </h3>
+                    <p className="text-gray-800 text-sm mb-1">
+                      <span className="font-medium">Project:</span> {task.projectName}
+                    </p>
+                    <p className="text-gray-800 text-sm mb-1">
+                      <span className="font-medium">Assigned To:</span> {task.assignedTo}
+                    </p>
+                    <p className="text-gray-800 text-sm">
+                      <span className="font-medium">Status:</span> {task.status}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>
   );
-};
-
+}
 export default Work;
