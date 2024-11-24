@@ -7,6 +7,7 @@ import Home from './Components/Home'
 import axios from 'axios'
 import Navbar from './Components/Navbar'
 import LandingPage from './Components/LandingPage'
+import Access from './Components/Access'
 // import TokenComponents from './Components/TokenComponents'
 //import bg from './assets/'
 
@@ -26,6 +27,7 @@ function App() {
         <Route path='/signup' element={<Signup />} />
         <Route path='/login' element={<Login />} />
         <Route path="*" element={<p>Path not resolved</p>} />
+        <Route path='/access' element={<Access />} />
       </Routes>
     </div>
   )
