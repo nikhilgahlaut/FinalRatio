@@ -119,3 +119,43 @@ exports.logout = (req, res) => {
         })
     }
 }
+
+exports.updateAccess = async (req, res) => {
+    const { email, usertype, projectList } = req.body;
+    try {
+      const user = await userModel.findOneAndUpdate(
+        { email },
+        { role: usertype, wbs: projectList }, // Update role and projects
+        { new: true } // Return the updated document
+      );
+  
+      if (!user) {
+        return res.status(404).send('User not found');
+      }
+  
+      res.send(user);
+    } catch (error) {
+      console.error(error);
+      res.status(500).send('Server error');
+    }
+  };
+  
+  
+
+exports.getUsersByStatus = async (req, res) => {
+    const { statusType } = req.params;
+  
+    try {
+      let users;
+      users = await userModel.find({}, 'name email role wbs');
+  
+      if (users.length === 0) {
+        return res.status(404).send('No users found');
+      }
+  
+      res.send(users);
+    } catch (error) {
+      console.error(error);
+      res.status(500).send('Server error');
+    }
+  };
