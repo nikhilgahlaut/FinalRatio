@@ -1,6 +1,8 @@
 
 import Signup from './Components/Signup'
 import Login from './Components/Login'
+import Work from './Components/Work'
+import TaskForm from './Components/work-form'
 import { Toaster } from 'react-hot-toast'
 import { Routes, Route } from 'react-router-dom'
 import Home from './Components/Home'
@@ -28,6 +30,8 @@ function App() {
         <Route path='/login' element={<Login />} />
         <Route path="*" element={<p>Path not resolved</p>} />
         <Route path='/access' element={<Access />} />
+        <Route path='/work' element={<Work />} />
+        <Route path='/workform' element={<TaskForm />} />
       </Routes>
     </div>
   )
