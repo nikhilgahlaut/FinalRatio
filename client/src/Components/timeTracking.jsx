@@ -1,21 +1,23 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Select from "react-select";
+import axios from 'axios';
 
 // TaskCard Component
 const TaskCard = ({ task, onEdit }) => {
-  const progressPercentage = (task.hoursLogged / task.budgetHours) * 100;
+  const progressPercentage = (task.loggedHours / task.budgetHours) * 100;
   const cappedProgressPercentage = Math.min(progressPercentage, 100);
-  const isOverBudget = task.hoursLogged > task.budgetHours;
+  const isOverBudget = task.loggedHours > task.budgetHours;
   const barColor =
     task.status === "Completed"
       ? "bg-green-500"
       : isOverBudget
-      ? "bg-red-500"
-      : "bg-blue-500";
+        ? "bg-red-500"
+        : "bg-blue-500";
+  //console.log("creating task")
 
   return (
     <div className="bg-white shadow rounded p-4 relative">
-      <h3 className="text-lg font-semibold">{task.taskName}</h3>
+      <h3 className="text-lg font-semibold">{task.taskType}</h3>
       <p className="text-sm text-gray-600">{task.projectName}</p>
       <p className="text-sm">
         <strong>Assigned to:</strong> {task.assignedTo}
@@ -36,7 +38,7 @@ const TaskCard = ({ task, onEdit }) => {
           <div
             className="absolute top-0 h-full flex items-center"
             style={{
-              left: `${(task.budgetHours / task.hoursLogged) * 100}%`,
+              left: `${(task.budgetHours / task.loggedHours) * 100}%`,
             }}
           >
             <div className="w-0.5 h-full bg-white opacity-70"></div>
@@ -46,7 +48,7 @@ const TaskCard = ({ task, onEdit }) => {
 
       {/* Hours Display */}
       <p className="text-sm text-center mt-1 text-gray-700">
-        {task.hoursLogged}/{task.budgetHours} hours
+        {task.loggedHours}/{task.budgetHours} hours
       </p>
 
       {/* Edit Button */}
@@ -67,7 +69,7 @@ const TaskList = ({ title, tasks, onEdit }) => {
       <h2 className="text-xl font-bold mb-4">{title}</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {tasks.map((task) => (
-          <TaskCard key={task.id} task={task} onEdit={onEdit} />
+          <TaskCard key={task._id} task={task} onEdit={onEdit} />
         ))}
       </div>
     </div>
@@ -76,8 +78,9 @@ const TaskList = ({ title, tasks, onEdit }) => {
 
 // EditModal Component
 const EditModal = ({ task, onClose, onSave }) => {
-  const [hoursLogged, setHoursLogged] = useState(task.hoursLogged);
+  const [loggedHours, setloggedHours] = useState(task.loggedHours);
   const [status, setStatus] = useState(task.status);
+  const [selectedTaskId, setSelectedTaskId] = useState(task._id);
 
   const statusOptions = [
     { value: "Not Started", label: "Not Started" },
@@ -85,8 +88,16 @@ const EditModal = ({ task, onClose, onSave }) => {
     { value: "Completed", label: "Completed" },
   ];
 
-  const handleSave = () => {
-    onSave({ ...task, hoursLogged, status });
+  const handleSave = async () => {
+
+    const dto  = {
+      loggedHours : loggedHours,
+      status : status
+    };
+
+    const response = await axios.put(`/workTrack/updateTime/${selectedTaskId}`, dto);
+
+    onSave({ ...task, loggedHours, status });
     onClose();
   };
 
@@ -99,8 +110,10 @@ const EditModal = ({ task, onClose, onSave }) => {
           <label className="block text-sm font-medium mb-2">Hours Logged</label>
           <input
             type="number"
-            value={hoursLogged}
-            onChange={(e) => setHoursLogged(Number(e.target.value))}
+            //value={loggedHours}
+            //onChange={(e) => setloggedHours(Number(e.target.value))}
+            value={loggedHours === 0 ? "" : loggedHours} // Prevent 0 from showing when input is cleared
+            onChange={(e) => setloggedHours(e.target.value === "" ? 0 : Number(e.target.value))} // Handle empty string
             className="w-full border border-gray-300 rounded px-3 py-2"
           />
         </div>
@@ -135,142 +148,217 @@ const EditModal = ({ task, onClose, onSave }) => {
 
 // CreateTaskModal Component
 const CreateTaskModal = ({ onClose, onCreate }) => {
-    const [taskName, setTaskName] = useState("");
-    const [projectName, setProjectName] = useState(null);
-    const [assignedTo, setAssignedTo] = useState(null);
-    const [budgetHours, setBudgetHours] = useState(0);
-    const [dueDate, setDueDate] = useState("");
+  const [taskType, setTaskType] = useState("");
+  const [projectName, setProjectName] = useState(null);
+  const [assignedTo, setAssignedTo] = useState(null);
+  const [budgetHours, setBudgetHours] = useState("");
+  const [dueDate, setDueDate] = useState("");
+  const [users, setUsers] = useState([]);
+  const [projects, setProjects] = useState([]);
 
-    const users = [
-        { value: "John Doe", label: "John Doe" },
-        { value: "Jane Smith", label: "Jane Smith" },
-        { value: "Alice Brown", label: "Alice Brown" },
-      ];
-      
-      const projects = [
-        { value: "Website Redesign", label: "Website Redesign" },
-        { value: "Admin Panel", label: "Admin Panel" },
-        { value: "Mobile App", label: "Mobile App" },
-        { value: "Marketing Site", label: "Marketing Site" },
-      ];
-  
-    const handleCreate = () => {
-      if (!taskName || !projectName || !assignedTo || !budgetHours || !dueDate) {
-        alert("Please fill all the fields.");
-        return;
+  // const users = [
+  //     { value: "John Doe", label: "John Doe" },
+  //     { value: "Jane Smith", label: "Jane Smith" },
+  //     { value: "Alice Brown", label: "Alice Brown" },
+  //   ];
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        // setIsLoading(true);
+        const response = await axios.get('/user/access/getUsers'); // Adjust the endpoint
+        const formatedUsers = response.data.map((user) => ({
+          value: user.name,
+          label: user.name,
+        }));
+
+        ////console.log(formatedUsers); // Logs the formatted data correctly
+        setUsers(formatedUsers); // Updates the state
+
+
+      } catch (err) {
+        console.error('Error fetching users:', err);
+        setError('Failed to fetch users. Please try again.');
+      } finally {
+        // setIsLoading(false);
       }
-      
-      const newTask = {
-        id: Date.now(),
-        taskName,
-        projectName: projectName.label,
-        assignedTo: assignedTo.label,
-        budgetHours,
-        hoursLogged: 0,
-        status: "Not Started",
-        dueDate,
-      };
-      onCreate(newTask);
-      onClose();
     };
+
+    fetchUsers();
+  }, []);
+
+  //console.log("users: ", users);
+
+  // const projects = [
+  //   { value: "Website Redesign", label: "Website Redesign" },
+  //   { value: "Admin Panel", label: "Admin Panel" },
+  //   { value: "Mobile App", label: "Mobile App" },
+  //   { value: "Marketing Site", label: "Marketing Site" },
+  // ];
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        //setIsFetchingProjects(true);
+        const response = await axios.get('/client/clientData');
+        const formattedProjects = response.data.data.map((project) => ({
+          value: project.proj_name,
+          label: project.proj_name,
+        }));
+        setProjects(formattedProjects);
+      } catch (err) {
+        console.error('Error fetching projects:', err);
+        setError('Failed to fetch projects. Please try again.');
+      } finally {
+        //setIsFetchingProjects(false);
+      }
+    };
+
+    fetchProjects();
+  }, []);
+
+  const handleCreate = async () => {
+    if (!taskType || !projectName || !assignedTo || !budgetHours || !dueDate) {
+      alert("Please fill all the fields.");
+      return;
+    }
+    const newTask = {
+      taskType,
+      projectName: projectName.label,
+      assignedTo: assignedTo.label,
+      budgetHours,
+      loggedHours: 0,
+      status: "Not Started",
+      dueDate,
+    };
+    console.log(newTask);
+    const response = await axios.post('/workTrack/addTime', newTask);
+    //console.log(response);
+    onCreate(newTask);
+
+    onClose();
+  };
   
-    return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-        <div className="bg-white p-6 rounded shadow w-96">
-          <h2 className="text-lg font-bold mb-4">Create New Task</h2>
-  
-          {/* Task Name */}
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-2">Task Name</label>
-            <input
-              type="text"
-              value={taskName}
-              onChange={(e) => setTaskName(e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2"
-            />
-          </div>
-  
-          {/* Project Name Dropdown */}
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-2">Project Name</label>
-            <Select
-              options={projects}
-              value={projectName}
-              onChange={setProjectName}
-              placeholder="Select Project"
-              className="w-full"
-            />
-          </div>
-  
-          {/* Assigned To Dropdown */}
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-2">Assigned To</label>
-            <Select
-              options={users}
-              value={assignedTo}
-              onChange={setAssignedTo}
-              placeholder="Select User"
-              className="w-full"
-            />
-          </div>
-  
-          {/* Budget Hours */}
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-2">Budget Hours</label>
-            <input
-              type="number"
-              value={budgetHours}
-              onChange={(e) => setBudgetHours(Number(e.target.value))}
-              className="w-full border border-gray-300 rounded px-3 py-2"
-            />
-          </div>
-  
-          {/* Due Date */}
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-2">Due Date</label>
-            <input
-              type="date"
-              value={dueDate}
-              onChange={(e) => setDueDate(e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2"
-            />
-          </div>
-  
-          {/* Modal Actions */}
-          <div className="flex justify-end space-x-4">
-            <button
-              onClick={onClose}
-              className="bg-gray-500 text-white px-4 py-2 rounded"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleCreate}
-              className="bg-blue-500 text-white px-4 py-2 rounded"
-            >
-              Create
-            </button>
-          </div>
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+      <div className="bg-white p-6 rounded shadow w-96">
+        <h2 className="text-lg font-bold mb-4">Create New Task</h2>
+
+        {/* Task Name */}
+        <div className="mb-4">
+          <label className="block text-sm font-medium mb-2">Task Name</label>
+          <input
+            type="text"
+            value={taskType}
+            onChange={(e) => setTaskType(e.target.value)}
+            className="w-full border border-gray-300 rounded px-3 py-2"
+          />
+        </div>
+
+        {/* Project Name Dropdown */}
+        <div className="mb-4">
+          <label className="block text-sm font-medium mb-2">Project Name</label>
+          <Select
+            options={projects}
+            value={projectName}
+            onChange={setProjectName}
+            placeholder="Select Project"
+            className="w-full"
+          />
+        </div>
+
+        {/* Assigned To Dropdown */}
+        <div className="mb-4">
+          <label className="block text-sm font-medium mb-2">Assigned To</label>
+          <Select
+            options={users}
+            value={assignedTo}
+            onChange={setAssignedTo}
+            placeholder="Select User"
+            className="w-full"
+          />
+        </div>
+
+        {/* Budget Hours */}
+        <div className="mb-4">
+          <label className="block text-sm font-medium mb-2">Budget Hours</label>
+          <input
+            type="number"
+            value={budgetHours === 0 ? "" : budgetHours} // Prevent 0 from showing when input is cleared
+            onChange={(e) => setBudgetHours(e.target.value === "" ? 0 : Number(e.target.value))} // Handle empty string
+            placeholder="Enter Hours"
+            className="w-full border border-gray-300 rounded px-3 py-2"
+          />
+
+        </div>
+
+        {/* Due Date */}
+        <div className="mb-4">
+          <label className="block text-sm font-medium mb-2">Due Date</label>
+          <input
+            type="date"
+            value={dueDate}
+            onChange={(e) => setDueDate(e.target.value)}
+            className="w-full border border-gray-300 rounded px-3 py-2"
+          />
+        </div>
+
+        {/* Modal Actions */}
+        <div className="flex justify-end space-x-4">
+          <button
+            onClick={onClose}
+            className="bg-gray-500 text-white px-4 py-2 rounded"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleCreate}
+            className="bg-blue-500 text-white px-4 py-2 rounded"
+          >
+            Create
+          </button>
         </div>
       </div>
-    );
-  };
+    </div>
+  );
+};
+
+const fetchTasksData = async () => {
+  const response = await axios.get('/workTrack/getTime'); // replace with actual API URL
+  ////console.log(response)
+  const data = await response.data;
+  return data;
+};
 
 // Main App Component
 const App = () => {
-  const [tasks, setTasks] = useState([
-    { id: 1, taskName: "Fix login bug", projectName: "Website Redesign", assignedTo: "John Doe", budgetHours: 5, hoursLogged: 3, status: "In Progress", dueDate: "2024-11-30" },
-    { id: 2, taskName: "Develop Dashboard", projectName: "Admin Panel", assignedTo: "Jane Smith", budgetHours: 10, hoursLogged: 2, status: "Not Started", dueDate: "2024-12-02" },
-    { id: 3, taskName: "Write API Documentation", projectName: "Website Redesign", assignedTo: "John Doe", budgetHours: 8, hoursLogged: 4, status: "In Progress", dueDate: "2024-12-01" },
-    { id: 4, taskName: "Refactor Codebase", projectName: "Mobile App", assignedTo: "Alice Brown", budgetHours: 15, hoursLogged: 15, status: "Completed", dueDate: "2024-11-29" },
-    { id: 5, taskName: "Create Landing Page", projectName: "Marketing Site", assignedTo: "Jane Smith", budgetHours: 6, hoursLogged: 6, status: "Completed", dueDate: "2024-11-28" },
-  ]);
-  
+  // const [tasks, setTasks] = useState([
+  //   { id: 1, taskName: "Fix login bug", projectName: "Website Redesign", assignedTo: "John Doe", budgetHours: 5, loggedHours: 3, status: "In Progress", dueDate: "2024-11-30" },
+  //   { id: 2, taskName: "Develop Dashboard", projectName: "Admin Panel", assignedTo: "Jane Smith", budgetHours: 10, loggedHours: 2, status: "Not Started", dueDate: "2024-12-02" },
+  //   { id: 3, taskName: "Write API Documentation", projectName: "Website Redesign", assignedTo: "John Doe", budgetHours: 8, loggedHours: 4, status: "In Progress", dueDate: "2024-12-01" },
+  //   { id: 4, taskName: "Refactor Codebase", projectName: "Mobile App", assignedTo: "Alice Brown", budgetHours: 15, loggedHours: 15, status: "Completed", dueDate: "2024-11-29" },
+  //   { id: 5, taskName: "Create Landing Page", projectName: "Marketing Site", assignedTo: "Jane Smith", budgetHours: 6, loggedHours: 6, status: "Completed", dueDate: "2024-11-28" },
+  // ]);
+
 
   const [editingTask, setEditingTask] = useState(null);
   const [creatingTask, setCreatingTask] = useState(false);
   const [developerFilter, setDeveloperFilter] = useState([]);
   const [projectFilter, setProjectFilter] = useState([]);
+  const [tasks, setTasks] = useState([]);
+
+  useEffect(() => {
+    const loadTasks = async () => {
+      const tasksData = await fetchTasksData();
+      ////console.log("fetched data from DB")
+      //console.log(tasksData)
+      setTasks(tasksData);
+      //setFilteredTasks(tasksData); // Initially set filtered tasks to all tasks
+    };
+
+    loadTasks();
+  }, []);
+
 
   const developerOptions = [...new Set(tasks.map((task) => task.assignedTo))].map(
     (developer) => ({ value: developer, label: developer })
@@ -292,7 +380,7 @@ const App = () => {
   const handleSaveTask = (updatedTask) => {
     setTasks((prevTasks) =>
       prevTasks.map((task) =>
-        task.id === updatedTask.id ? updatedTask : task
+        task._id === updatedTask._id ? updatedTask : task
       )
     );
   };
@@ -315,11 +403,10 @@ const App = () => {
 
   return (
     <div className="max-w-6xl mx-auto p-4">
-      <h1 className="text-2xl font-bold text-center mb-6">Task Management</h1>
 
       {/* Filters */}
       <div className="flex justify-end mb-6 space-x-4">
-      <Select
+        <Select
           isMulti
           options={developerOptions}
           value={developerFilter}
