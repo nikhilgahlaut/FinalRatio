@@ -10,6 +10,7 @@ import axios from 'axios'
 import Navbar from './Components/Navbar'
 import LandingPage from './Components/LandingPage'
 import Access from './Components/Access'
+import Time from './Components/timeTracking'
 // import TokenComponents from './Components/TokenComponents'
 //import bg from './assets/'
 
@@ -32,6 +33,7 @@ function App() {
         <Route path='/access' element={<Access />} />
         <Route path='/work' element={<Work />} />
         <Route path='/workform' element={<TaskForm />} />
+        <Route path='/time' element={<Time />} />
       </Routes>
     </div>
   )
