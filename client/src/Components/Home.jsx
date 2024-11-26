@@ -11,11 +11,13 @@ function Home() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeServices, setActiveServices] = useState({});
   const [quarterIndex, setQuarterIndex] = useState(0);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isSliderTouched, setIsSliderTouched] = useState(false); // Track slider interaction
 
   // Fetch available services from backend
   const fetchServices = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/services/allservices");
+      const response = await axios.get("/services/allservices");
       if (response.data.success) {
         setServices(response.data.data);
       } else {
@@ -26,12 +28,12 @@ function Home() {
     }
   };
 
-  // Fetch user services from backend when user logs in
+  // Fetch user services from backend
   const fetchUserServices = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/client/clientData");
+      const response = await axios.get("/client/clientData");
       if (response.data.success) {
-        const user = response.data.data.find((client) => client.proj_id === 1); // Replace 1 with dynamic user proj_id
+        const user = response.data.data.find((client) => client.proj_id === 1); // Replace with dynamic user proj_id
         if (user) {
           setActiveServices(
             user.servicesOptedFor.reduce((acc, service) => {
@@ -63,10 +65,10 @@ function Home() {
     });
   };
 
-  // Save updated services to the backend
+  // Save updated services to the backendy
   const saveServicesToBackend = async (services) => {
     try {
-      const response = await axios.post("http://localhost:5000/client/updateServices", {
+      const response = await axios.post("/client/updateServices", {
         proj_id: 1, // Replace with dynamic user proj_id
         servicesOptedFor: services,
       });
@@ -88,6 +90,31 @@ function Home() {
         [service]: value,
       },
     }));
+
+    setIsSliderTouched(true); // Mark slider as touched
+  };
+
+  const saveProgressData = async () => {
+    setIsSaving(true);
+
+    try {
+      const response = await axios.post("/client/updateServices", {
+        proj_id: 1, // Replace with dynamic proj_id if required
+        progressData,
+      });
+
+      if (response.data.success) {
+        alert("Progress saved!");
+        setIsSliderTouched(false); // Reset slider touch state after saving
+      } else {
+        alert("Failed to save progress. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error saving progress data:", error);
+      alert("An error occurred while saving progress.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // Open/close the settings modal
@@ -119,7 +146,7 @@ function Home() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-white dark:bg-gray-900 dark:text-white relative">
+    <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-[#fefdfb] dark:bg-gray-900 dark:text-white relative">
       <button
         onClick={settingFn}
         className="absolute top-4 right-4 p-2 rounded-full text-gray-800 dark:text-white bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700"
@@ -178,14 +205,14 @@ function Home() {
               disabled={quarterIndex === 0}
               className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
             >
-              Previous Quarter
+              Previous
             </button>
             <button
               onClick={handleNextQuarter}
               disabled={quarterIndex === 3}
               className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
             >
-              Next Quarter
+              Next
             </button>
           </div>
 
@@ -200,12 +227,9 @@ function Home() {
 
             {/* Service Rows */}
             {Object.keys(activeServices).map((service) => (
-              <>
+              <React.Fragment key={service}>
                 {/* Service Name */}
-                <div
-                  key={service}
-                  className="bg-gray-300 dark:bg-gray-800 font-semibold py-2 px-4 text-center"
-                >
+                <div className="bg-gray-300 dark:bg-gray-800 font-semibold py-2 px-4 text-center">
                   {service}
                 </div>
 
@@ -226,18 +250,16 @@ function Home() {
                         onChange={(e) =>
                           handleSliderChange(month, service, parseInt(e.target.value))
                         }
-                        className={`w-full mt-2 ${
-                          months.indexOf(month) < currentMonth - 1 || months.indexOf(month) > currentMonth
+                        className={`w-full mt-2 ${months.indexOf(month) < currentMonth - 1 || months.indexOf(month) > currentMonth
                             ? "cursor-not-allowed opacity-50"
                             : ""
-                        }`}
+                          }`}
                         style={{
-                          background: `linear-gradient(to right, ${
-                            months.indexOf(month) >= currentMonth - 1 &&
-                            months.indexOf(month) <= currentMonth
+                          background: `linear-gradient(to right, ${months.indexOf(month) >= currentMonth - 1 &&
+                              months.indexOf(month) <= currentMonth
                               ? "green"
                               : "gray"
-                          } ${progressData[month]?.[service] || 0}%, #e0e0e0 0%)`,
+                            } ${progressData[month]?.[service] || 0}%, #e0e0e0 0%)`,
                         }}
                         disabled={
                           months.indexOf(month) < currentMonth - 1 ||
@@ -247,8 +269,18 @@ function Home() {
                     </div>
                   </div>
                 ))}
-              </>
+              </React.Fragment>
             ))}
+          </div>
+
+          <div className="flex justify-end mt-4 w-full max-w-4xl">
+            <button
+              onClick={saveProgressData}
+              className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
+              disabled={!isSliderTouched || isSaving} // Disable if no slider touched or saving
+            >
+              {isSaving ? "Saving..." : "Save"}
+            </button>
           </div>
         </>
       )}
