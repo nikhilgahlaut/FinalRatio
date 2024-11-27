@@ -159,3 +159,23 @@ exports.getUsersByStatus = async (req, res) => {
       res.status(500).send('Server error');
     }
   };
+  exports.getUserProject = async (req, res) => {
+    const { userId } = req.params;  // Assuming you're passing the userId as a parameter
+  
+    try {
+      // Fetch user by their ID, and only return the 'wbs' field
+      const user = await userModel.findById(userId, 'wbs');
+  
+      // If the user is not found
+      if (!user) {
+        return res.status(404).send('User not found');
+      }
+  
+      // Send the 'wbs' field back to the client
+      res.send(user.wbs);
+    } catch (error) {
+      console.error(error);
+      res.status(500).send('Server error');
+    }
+  };
+  

@@ -39,6 +39,7 @@ const jwtAuth = (req,res,next)=>{
             message:'Not Authorized!!'
         })
     }
+    
     //if tokens exists
     try {
         const payload = jwt.verify(token,process.env.SECRET)
