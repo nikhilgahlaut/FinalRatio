@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie'; // For cookie management
 import { jwtDecode } from 'jwt-decode'; // For decoding the JWT
 import axios from 'axios';
+import { IoLogOut } from "react-icons/io5";
+
 
 function Navbar() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -122,13 +124,6 @@ function Navbar() {
                             </>
                         ) : (
                             <>
-                                <li>
-                                    <button
-                                        onClick={handleLogout}
-                                        className="block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-green-700 md:p-0 dark:text-white md:dark:hover:text-green-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent">
-                                        Logout
-                                    </button>
-                                </li>
                                 <Link
                                     to={'/access'}
                                     className="block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-green-700 md:p-0 dark:text-white md:dark:hover:text-green-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent">
@@ -139,6 +134,13 @@ function Navbar() {
                                     className="block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-green-700 md:p-0 dark:text-white md:dark:hover:text-green-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent">
                                     Work
                                 </Link>
+                                <li>
+                                    <button
+                                        onClick={handleLogout}
+                                        className="block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-green-700 md:p-0 dark:text-white md:dark:hover:text-green-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent">
+                                        <IoLogOut size={25}/>
+                                    </button>
+                                </li>
                             </>
                         )}
                     </ul>

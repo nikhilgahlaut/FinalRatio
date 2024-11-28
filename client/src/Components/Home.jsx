@@ -38,12 +38,17 @@ function Home() {
     }
   };
 
-  // Fetch user services from backend
-  const fetchUserServices = async () => {
+  // Fetch user services based on the currently selected project
+  const fetchUserServices = async (projectId) => {
+    if (!projectId) {
+      console.error("No project ID provided");
+      return;
+    }
+
     try {
-      const response = await axios.get("/client/clientData");
+      const response = await axios.get(`/client/clientData?proj_id=${projectId}`);
       if (response.data.success) {
-        const user = response.data.data.find((client) => client.proj_id === 1); // Replace with dynamic user proj_id
+        const user = response.data.data.find((client) => client.proj_id === projectId);
         if (user) {
           setActiveServices(
             user.servicesOptedFor.reduce((acc, service) => {
@@ -52,10 +57,57 @@ function Home() {
             }, {})
           );
         }
+      } else {
+        console.error("Failed to fetch user services");
       }
     } catch (error) {
       console.error("Failed to fetch user services", error);
     }
+  };
+
+  useEffect(() => {
+    if (!userId) {
+      console.log("No User ID available yet.");
+      return;
+    }
+
+    const fetchProjects = async () => {
+      try {
+        const token = Cookies.get("token");
+        if (!token) {
+          console.error("No token found");
+          return;
+        }
+
+        const response = await axios.get(`/user/projects/${userId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (response.data && response.data.success) {
+          const projects = response.data.projects;
+          if (projects && projects.length > 0) {
+            setProjects(projects);
+            setSelectedProject(projects[0]); // Automatically select the first project
+            fetchUserServices(projects[0]?.proj_id); // Fetch services for the first project
+          } else {
+            console.error("No projects found");
+          }
+        } else {
+          console.error("Failed to fetch projects:", response.data.message || "Unknown error");
+        }
+      } catch (error) {
+        console.error("Error fetching projects:", error);
+      }
+    };
+
+    fetchProjects();
+  }, [userId]);
+
+  const handleProjectClick = (project) => {
+    setSelectedProject(project);
+    fetchUserServices(project.proj_id); // Fetch services for the selected project
   };
 
   // Handle service toggle in the settings modal
@@ -75,21 +127,29 @@ function Home() {
     });
   };
 
-  // Save updated services to the backendy
-  const saveServicesToBackend = async (services) => {
-    try {
-      const response = await axios.post("/client/updateServices", {
-        proj_id: 1, // Replace with dynamic user proj_id
-        servicesOptedFor: services,
-      });
+// Save updated services to the backend
+const saveServicesToBackend = async (services) => {
+  if (!selectedProject || !selectedProject.proj_id) {
+    console.error("No project selected or proj_id is missing");
+    return;
+  }
 
-      if (!response.data.success) {
-        console.error("Failed to update services");
-      }
-    } catch (error) {
-      console.error("Error updating services", error);
+  try {
+    const response = await axios.post("/client/updateServices", {
+      proj_id: selectedProject.proj_id, // Use the dynamically selected project ID
+      servicesOptedFor: services,
+    });
+
+    if (!response.data.success) {
+      console.error("Failed to update services");
+    } else {
+      console.log("Services updated successfully");
     }
-  };
+  } catch (error) {
+    console.error("Error updating services", error);
+  }
+};
+
 
   // Handle month slider change for progress
   const handleSliderChange = (month, service, value) => {
@@ -188,6 +248,7 @@ function Home() {
 
     const fetchProjects = async () => {
       try {
+        // Get the token from cookies
         const token = Cookies.get("token");
         console.log("Token in fetchProjects:", token);
 
@@ -203,22 +264,27 @@ function Home() {
           },
         });
 
-        console.log("API Response:", response.data);
+        console.log("API Response:", response.data); // Log the API response for debugging
 
-        const projects = response.data;
-        if (projects.length > 0) {
-          setProjects(projects);
-          console.log("Set projects state:", projects);
-
-          setSelectedProject(projects[0]);
-          // console.log("Set selected project:", projects[0]);
+        if (response.data && response.data.success) {
+          const projects = response.data.projects; // Adjust according to your API response structure
+          if (projects && projects.length > 0) {
+            setProjects(projects);
+            setSelectedProject(projects[0]); // Automatically select the first project, if needed
+            console.log("Projects successfully loaded:", projects);
+          } else {
+            console.error("No projects found");
+          }
         } else {
-          console.error("No projects found");
+          console.error("Failed to fetch projects:", response.data.message || "Unknown error");
         }
       } catch (error) {
         console.error("Error fetching projects:", error);
       }
     };
+
+
+
 
     fetchProjects();
   }, [userId]);
@@ -248,21 +314,21 @@ function Home() {
           </h2>
           <ul>
             {projects && projects.length > 0 ? (
-
-              projects.map((project, index) => (
+              projects.map((project) => (
                 <li
-                  key={index} // Using array index as key
+                  key={project.id} // Use unique ID if available
                   className={`p-2 mb-2 rounded cursor-pointer ${selectedProject === project ? "bg-green-600 text-black" : "bg-gray-200 dark:bg-gray-700"
                     }`}
-                  onClick={() => setSelectedProject(project)}
+                  onClick={() => handleProjectClick(project)} // Update to handle project selection
                 >
-                  {project}
+                  {project.proj_name} {/* Adjust for your project's structure */}
                 </li>
               ))
             ) : (
               <li className="text-gray-500 dark:text-gray-400">No Projects Found</li>
             )}
           </ul>
+
 
         </div>
       </div>

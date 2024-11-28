@@ -12,6 +12,8 @@ router.post('/login',loginDataValidate,logIn)
 router.get('/authuser/', jwtAuth, authUser)//user authentication
 router.get('/logout/',jwtAuth,logout)
 router.get('/projects/:userId', getUserProject);
+// router.get('/projects/:userId', getUserProject);
+
 
 
 module.exports  = router

@@ -1,103 +1,50 @@
-const Project = require('../Models/progressModel.js');
+const Progress = require('../Models/progressModel'); // Import your Progress model
 
-exports.home = (req, res) => {
-    res.send("<h1>Progress response</h1>")
-}
+// Fetch progress data for a specific project
+const getProgressData = async (req, res) => {
+    const { proj_id } = req.params;
 
-// Get all projects
-exports.getAllProjects = async (req, res) => {
     try {
-        const projects = await Project.find();
-        console.log(projects);
-        
-        res.status(200).json({
-            success:true,
-            data:projects});
+        const progress = await Progress.find({ proj_id });
+        if (!progress || progress.length === 0) { 
+            return res.status(404).json({ success: false, message: 'No progress data found for this project.' });
+        }
+
+        res.status(200).json({ success: true, data: progress });
     } catch (error) {
-        res.status(500).json({ message: 'Error fetching projects', error });
+        console.error('Error fetching progress data:', error);
+        res.status(500).json({ success: false, message: 'Internal server error.' });
     }
 };
 
-
-// Create or update project with initial progress data
-exports.createProject = async (req, res) => {
-    const { proj_id, serviceId, data } = req.body;
+// Save or update progress data
+const saveProgressData = async (req, res) => {
+    const { proj_id, progressData } = req.body;
 
     try {
-        // Find the project by proj_id and serviceId
-        let project = await Project.findOne({ proj_id, serviceId });
-
-        if (project) {
-            // If project exists, update its data
-            for (const [month, progressData] of Object.entries(data)) {
-                project.data[month] = {
-                    progress: progressData.progress,
-                    updatedOn: new Date()
-                };
-            }
-            await project.save();
-            res.json({ message: 'Project updated with progress data', project });
-        } else {
-            // If project does not exist, create a new one
-            const newData = {};
-            for (const [month, progressData] of Object.entries(data)) {
-                newData[month] = {
-                    progress: progressData.progress,
-                    updatedOn: new Date()
-                };
+        // Loop through progressData to update or create records
+        for (const [serviceId, monthlyData] of Object.entries(progressData)) {
+            const update = {};
+            for (const [month, { progress }] of Object.entries(monthlyData)) {
+                update[`data.${month}.progress`] = progress;
+                update[`data.${month}.updatedOn`] = new Date();
             }
 
-            project = new Project({
-                proj_id,
-                serviceId,
-                data: newData
-            });
-
-            await project.save();
-            res.status(201).json({ message: 'Project created with progress data', project });
+            await Progress.updateOne(
+                { proj_id, serviceId },
+                { $set: update },
+                { upsert: true } // Create a new document if it doesn't exist
+            );
         }
+
+        res.status(200).json({ success: true, message: 'Progress data saved successfully.' });
     } catch (error) {
-        res.status(500).json({ message: 'Error creating or updating project', error });
+        console.error('Error saving progress data:', error);
+        res.status(500).json({ success: false, message: 'Failed to save progress data.' });
     }
 };
 
-
-// Get a project by proj_id and serviceId
-exports.getProject = async (req, res) => {
-    const { proj_id, serviceId } = req.params;
-
-    try {
-        const project = await Project.findOne({ proj_id, serviceId });
-        if (!project) {
-            return res.status(404).json({ message: 'Project not found' });
-        }
-        res.json(project);
-    } catch (error) {
-        res.status(500).json({ message: 'Error fetching project', error });
-    }
+module.exports = {
+    getProgressData,
+    saveProgressData,
 };
-
-// Update progress for a specific month
-exports.updateProgress = async (req, res) => {
-    const { proj_id, serviceId, month } = req.params;
-    const { progress } = req.body;
-
-    try {
-        const project = await Project.findOne({ proj_id, serviceId });
-        if (!project) {
-            return res.status(404).json({ message: 'Project not found' });
-        }
-
-        // Update progress and updatedOn for the specified month
-        project.data[month] = {
-            progress,
-            updatedOn: new Date()
-        };
-
-        await project.save();
-        res.json({ message: 'Progress updated', project });
-    } catch (error) {
-        res.status(500).json({ message: 'Error updating progress', error });
-    }
-};
-

@@ -1,5 +1,7 @@
 const userModel = require('../Models/UserModel.js')
 const bcrypt = require('bcrypt')
+// const User = require("../Models/userData");
+const Client = require("../Models/ClientModel.js");
 exports.home = (req, res) => {
     res.send("<h1>Home response</h1>")
 }
@@ -176,6 +178,39 @@ exports.getUsersByStatus = async (req, res) => {
     } catch (error) {
       console.error(error);
       res.status(500).send('Server error');
+    }
+  };
+  exports.getUserProject = async (req, res) => {
+    try {
+      const { userId } = req.params;
+  
+      // Find the user by ID
+      const user = await userModel.findById(userId);
+  
+      if (!user) {
+        return res.status(404).json({ success: false, message: "User not found" });
+      }
+  
+      const { wbs } = user;
+  
+      if (!wbs || wbs.length === 0) {
+        return res.status(404).json({ success: false, message: "No projects found for this user" });
+      }
+  
+      // Fetch project IDs from clientModel where proj_name matches wbs array
+      const projects = await Client.find(
+        { proj_name: { $in: wbs } }, // Match projects in user's WBS
+        { proj_name: 1, proj_id: 1, _id: 0 } // Only fetch proj_name and proj_id
+      );
+  
+      if (!projects || projects.length === 0) {
+        return res.status(404).json({ success: false, message: "No matching projects found" });
+      }
+  
+      return res.status(200).json({ success: true, projects });
+    } catch (error) {
+      console.error("Error fetching user projects:", error);
+      res.status(500).json({ success: false, message: "Internal server error" });
     }
   };
   
