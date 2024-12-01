@@ -5,16 +5,15 @@ import { jwtDecode } from 'jwt-decode'; // For decoding the JWT
 import axios from 'axios';
 import { IoLogOut } from "react-icons/io5";
 
-
 function Navbar() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [userRole, setUserRole] = useState(null); // To store the user's role
     const navigate = useNavigate();
 
-    // Check for token on component mount and whenever the token changes
     useEffect(() => {
         checkLoginStatus(); // Check login status when the component is mounted
-    }, []); // Empty dependency array so it runs only once on mount
+    }, []);
 
     const checkLoginStatus = () => {
         const token = Cookies.get('token'); // Retrieve JWT token from cookies
@@ -22,16 +21,20 @@ function Navbar() {
             try {
                 const decoded = jwtDecode(token); // Decode the token
                 if (decoded) {
-                    setIsLoggedIn(true); // Set user as logged in if token is valid
+                    setIsLoggedIn(true);
+                    setUserRole(decoded.role); // Assuming the role is stored in the JWT as 'role'
                 } else {
                     setIsLoggedIn(false);
+                    setUserRole(null);
                 }
             } catch (error) {
                 console.error('Invalid JWT:', error); // Handle decoding error
                 setIsLoggedIn(false);
+                setUserRole(null);
             }
         } else {
             setIsLoggedIn(false);
+            setUserRole(null);
         }
     };
 
@@ -41,26 +44,20 @@ function Navbar() {
 
     const handleLogout = async () => {
         try {
-            // Call logout API using GET request to remove token from cookie
             const response = await axios.get('http://localhost:5000/user/logout', {
-                withCredentials: true, // Make sure the cookie is included in the request
+                withCredentials: true,
             });
 
             if (response.data.success) {
-                // Remove token from cookies after logout
                 Cookies.remove('token');
-
-                // Update the login state immediately after logout
                 setIsLoggedIn(false);
-
-                // Navigate to the login page
+                setUserRole(null);
                 navigate('/login');
             } else {
                 console.error('Logout failed:', response.data.message);
             }
         } catch (error) {
             console.error('Logout failed:', error);
-            // Optional: Show error message to the user
         }
     };
 
@@ -97,14 +94,7 @@ function Navbar() {
                 </button>
                 <div className={`${isMenuOpen ? '' : 'hidden'} w-full md:block md:w-auto`} id="navbar-default">
                     <ul className="font-medium flex flex-col p-4 md:p-0 mt-4 border border-gray-100 rounded-lg bg-[#fefdfb] md:flex-row md:space-x-8 rtl:space-x-reverse md:mt-0 md:border-0 md:bg-[#fefdfb] dark:bg-gray-800 md:dark:bg-gray-900 dark:border-gray-700">
-                        <li>
-                            <Link
-                                to={'/'}
-                                className="block py-2 px-3 text-white bg-green-700 rounded md:bg-transparent md:text-green-700 md:p-0 dark:text-white md:dark:text-green-500"
-                                aria-current="page">
-                                Home
-                            </Link>
-                        </li>
+
                         {!isLoggedIn ? (
                             <>
                                 <li>
@@ -124,21 +114,32 @@ function Navbar() {
                             </>
                         ) : (
                             <>
-                                <Link
-                                    to={'/access'}
-                                    className="block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-green-700 md:p-0 dark:text-white md:dark:hover:text-green-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent">
-                                    Access
-                                </Link>
+
+                                {userRole === 'app_admin' && (
+                                    <Link
+                                        to={'/access'}
+                                        className="block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-green-700 md:p-0 dark:text-white md:dark:hover:text-green-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent">
+                                        Access
+                                    </Link>
+                                )}
                                 <Link
                                     to={'/time'}
                                     className="block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-green-700 md:p-0 dark:text-white md:dark:hover:text-green-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent">
-                                    Work
+                                    Timesheet
                                 </Link>
+                                <li>
+                                    <Link
+                                        to={'/dashboard'}
+                                        className="block py-2 px-3 text-white bg-green-700 rounded md:bg-transparent md:text-green-700 md:p-0 dark:text-white md:dark:text-green-500"
+                                        aria-current="page">
+                                        Workflow
+                                    </Link>
+                                </li>
                                 <li>
                                     <button
                                         onClick={handleLogout}
                                         className="block py-2 px-3 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-green-700 md:p-0 dark:text-white md:dark:hover:text-green-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent">
-                                        <IoLogOut size={25}/>
+                                        <IoLogOut size={25} />
                                     </button>
                                 </li>
                             </>

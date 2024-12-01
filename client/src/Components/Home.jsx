@@ -22,7 +22,43 @@ function Home() {
   const [isSliderTouched, setIsSliderTouched] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Ensure this is false by default
   const [userId, setUserId] = useState(null); // Assuming userId is fetched or passed here
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userRole, setUserRole] = useState(null); // To store the user's role
+  const [username, setUsername] = useState('');
+  const [editable, setEditable] = useState(false);
 
+
+  useEffect(() => {
+    const token = Cookies.get('token');
+    if (token) {
+      try {
+        const decoded = jwtDecode(token);
+        if (decoded && decoded.username) {
+          setIsLoggedIn(true);
+          // setUsername(decoded.username);
+          setUserRole(decoded.role)
+        } else {
+          setIsLoggedIn(false);
+        }
+      } catch (error) {
+        console.error('Invalid JWT:', error);
+        setIsLoggedIn(false);
+      }
+    }
+  }, []);
+
+
+  //only show modal for proj_owner, app_admin
+  useEffect(() => {
+    console.log("checking usr role", userRole);
+    if (userRole === "app_admin" || userRole === "proj_owner") {
+      console.log("checking user role inside  if", userRole);
+      setEditable(true);
+    }
+    else
+      setEditable(false);
+
+  }, [userRole]);
 
   // Fetch available services from backend
   const fetchServices = async () => {
@@ -40,6 +76,8 @@ function Home() {
 
   // Fetch user services based on the currently selected project
   const fetchUserServices = async (projectId) => {
+    console.log(projectId);
+
     if (!projectId) {
       console.error("No project ID provided");
       return;
@@ -89,6 +127,7 @@ function Home() {
           const projects = response.data.projects;
           if (projects && projects.length > 0) {
             setProjects(projects);
+
             setSelectedProject(projects[0]); // Automatically select the first project
             fetchUserServices(projects[0]?.proj_id); // Fetch services for the first project
           } else {
@@ -127,32 +166,35 @@ function Home() {
     });
   };
 
-// Save updated services to the backend
-const saveServicesToBackend = async (services) => {
-  if (!selectedProject || !selectedProject.proj_id) {
-    console.error("No project selected or proj_id is missing");
-    return;
-  }
-
-  try {
-    const response = await axios.post("/client/updateServices", {
-      proj_id: selectedProject.proj_id, // Use the dynamically selected project ID
-      servicesOptedFor: services,
-    });
-
-    if (!response.data.success) {
-      console.error("Failed to update services");
-    } else {
-      console.log("Services updated successfully");
+  // console.log("selectedProject.proj_id",selectedProject.proj_id);
+  // Save updated services to the backend
+  const saveServicesToBackend = async (services) => {
+    if (!selectedProject || !selectedProject.proj_id) {
+      console.error("No project selected or proj_id is missing");
+      return;
     }
-  } catch (error) {
-    console.error("Error updating services", error);
-  }
-};
 
+    try {
+      const response = await axios.post("/client/updateServices", {
+        proj_id: selectedProject.proj_id, // Use the dynamically selected project ID
+        servicesOptedFor: services,
+      });
+
+      if (!response.data.success) {
+        console.error("Failed to update services");
+      } else {
+        console.log("Services updated successfully");
+      }
+    } catch (error) {
+      console.error("Error updating services", error);
+    }
+  };
 
   // Handle month slider change for progress
   const handleSliderChange = (month, service, value) => {
+    console.log("changes made", month, service, value, new Date().getFullYear());
+
+
     setProgressData((prevData) => ({
       ...prevData,
       [month]: {
@@ -164,28 +206,31 @@ const saveServicesToBackend = async (services) => {
     setIsSliderTouched(true); // Mark slider as touched
   };
 
-  const saveProgressData = async () => {
-    setIsSaving(true);
+  console.log("progresss",progressData);
+  
 
-    try {
-      const response = await axios.post("/client/updateServices", {
-        proj_id: 1, // Replace with dynamic proj_id if required
-        progressData,
-      });
+  // const saveProgressData = async () => {
+  //   setIsSaving(true);
 
-      if (response.data.success) {
-        alert("Progress saved!");
-        setIsSliderTouched(false); // Reset slider touch state after saving
-      } else {
-        alert("Failed to save progress. Please try again.");
-      }
-    } catch (error) {
-      console.error("Error saving progress data:", error);
-      alert("An error occurred while saving progress.");
-    } finally {
-      setIsSaving(false);
-    }
-  };
+  //   try {
+  //     const response = await axios.post("/client/updateServices", {
+  //       proj_id: selectedProject.proj_id, // Replace with dynamic proj_id if required
+  //       progressData,
+  //     });
+
+  //     if (response.data.success) {
+  //       alert("Progress saved!");
+  //       setIsSliderTouched(false); // Reset slider touch state after saving
+  //     } else {
+  //       alert("Failed to save progress. Please try again.");
+  //     }
+  //   } catch (error) {
+  //     console.error("Error saving progress data:", error);
+  //     alert("An error occurred while saving progress.");
+  //   } finally {
+  //     setIsSaving(false);
+  //   }
+  // };
 
   // Open/close the settings modal
   const settingFn = () => {
@@ -240,12 +285,12 @@ const saveServicesToBackend = async (services) => {
     }
   }, []);
 
+
   useEffect(() => {
     if (!userId) {
       console.log("No User ID available yet.");
       return;
     }
-
     const fetchProjects = async () => {
       try {
         // Get the token from cookies
@@ -316,7 +361,7 @@ const saveServicesToBackend = async (services) => {
             {projects && projects.length > 0 ? (
               projects.map((project) => (
                 <li
-                  key={project.id} // Use unique ID if available
+                  key={project.proj_id} // Use unique ID if available
                   className={`p-2 mb-2 rounded cursor-pointer ${selectedProject === project ? "bg-green-600 text-black" : "bg-gray-200 dark:bg-gray-700"
                     }`}
                   onClick={() => handleProjectClick(project)} // Update to handle project selection
@@ -345,12 +390,15 @@ const saveServicesToBackend = async (services) => {
           </button>
         )}
 
-        <button
-          onClick={settingFn}
-          className="absolute top-4 right-4 p-2 rounded-full text-gray-800 dark:text-white bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700"
-        >
-          <FiSettings size={24} />
-        </button>
+        {editable && (
+          <button
+            onClick={settingFn}
+            className="absolute top-4 right-4 p-2 rounded-full text-gray-800 dark:text-white bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700"
+          >
+            <FiSettings size={24} />
+          </button>
+        )}
+
 
         {/* Settings Modal */}
         {isModalOpen && (
@@ -448,7 +496,7 @@ const saveServicesToBackend = async (services) => {
                           onChange={(e) =>
                             handleSliderChange(month, service, parseInt(e.target.value))
                           }
-                          className={`w-full mt-2 ${months.indexOf(month) < currentMonth - 1 || months.indexOf(month) > currentMonth
+                          className={`w-full mt-2 ${userRole === "proj_client" || months.indexOf(month) < currentMonth - 1 || months.indexOf(month) > currentMonth
                             ? "cursor-not-allowed opacity-50"
                             : ""
                             }`}
@@ -459,7 +507,7 @@ const saveServicesToBackend = async (services) => {
                               : "gray"
                               } ${progressData[month]?.[service] || 0}%, #e0e0e0 0%)`,
                           }}
-                          disabled={
+                          disabled={userRole === "proj_client" ? months :
                             months.indexOf(month) < currentMonth - 1 ||
                             months.indexOf(month) > currentMonth
                           }
@@ -472,13 +520,15 @@ const saveServicesToBackend = async (services) => {
             </div>
 
             <div className="flex justify-end mt-4 w-full max-w-4xl">
-              <button
-                onClick={saveProgressData}
-                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
-                disabled={!isSliderTouched || isSaving} // Disable if no slider touched or saving
-              >
-                {isSaving ? "Saving..." : "Save"}
-              </button>
+              {userRole !== "proj_client" ? (<>
+                <button
+                  onClick={saveServicesToBackend}
+                  className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
+                  disabled={!isSliderTouched || isSaving} // Disable if no slider touched or saving
+                >
+                  {isSaving ? "Saving..." : "Save"}
+                </button></>) : (<></>)}
+
             </div>
           </>
         )}

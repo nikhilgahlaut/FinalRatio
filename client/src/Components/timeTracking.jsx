@@ -1,19 +1,58 @@
 import React, { useState, useEffect } from "react";
 import Select from "react-select";
 import axios from 'axios';
+import Cookies from 'js-cookie'; // For cookie management
+import { jwtDecode } from 'jwt-decode'; // For decoding the JWT
+
 
 // TaskCard Component
 const TaskCard = ({ task, onEdit }) => {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userRole, setUserRole] = useState(null); // To store the user's role
+  const [username, setUsername] = useState('');
+  const [editable, setEditable] = useState(false);
+
   const progressPercentage = (task.loggedHours / task.budgetHours) * 100;
   const cappedProgressPercentage = Math.min(progressPercentage, 100);
   const isOverBudget = task.loggedHours > task.budgetHours;
+
   const barColor =
     task.status === "Completed"
       ? "bg-green-500"
       : isOverBudget
         ? "bg-red-500"
         : "bg-blue-500";
-  //console.log("creating task")
+
+  useEffect(() => {
+    const token = Cookies.get('token');
+    if (token) {
+      try {
+        const decoded = jwtDecode(token);
+        if (decoded && decoded.username) {
+          setIsLoggedIn(true);
+          setUsername(decoded.username);
+          setUserRole(decoded.role)
+        } else {
+          setIsLoggedIn(false);
+        }
+      } catch (error) {
+        console.error('Invalid JWT:', error);
+        setIsLoggedIn(false);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (userRole === "app_admin" || userRole === "proj_owner") {
+      setEditable(true);
+    }
+    else if (username === task.assignedTo) {
+      setEditable(true);
+    }
+    else
+      setEditable(false);
+
+  }, [username, task.assignedTo]);
 
   return (
     <div className="bg-white shadow rounded p-4 relative">
@@ -26,7 +65,6 @@ const TaskCard = ({ task, onEdit }) => {
         <strong>Due Date:</strong> {new Date(task.dueDate).toLocaleDateString()}
       </p>
 
-      {/* Progress Bar */}
       <div className="mt-4 relative">
         <div className="relative h-4 bg-gray-200 rounded overflow-hidden">
           <div
@@ -46,18 +84,18 @@ const TaskCard = ({ task, onEdit }) => {
         )}
       </div>
 
-      {/* Hours Display */}
       <p className="text-sm text-center mt-1 text-gray-700">
         {task.loggedHours}/{task.budgetHours} hours
       </p>
 
-      {/* Edit Button */}
-      <button
-        onClick={() => onEdit(task)}
-        className="absolute top-2 right-2 bg-blue-500 text-white p-1 rounded text-sm"
-      >
-        Edit
-      </button>
+      {editable && (
+        <button
+          onClick={() => onEdit(task)}
+          className="absolute top-2 right-2 bg-blue-500 text-white p-1 rounded text-sm"
+        >
+          Edit
+        </button>
+      )}
     </div>
   );
 };
@@ -90,9 +128,9 @@ const EditModal = ({ task, onClose, onSave }) => {
 
   const handleSave = async () => {
 
-    const dto  = {
-      loggedHours : loggedHours,
-      status : status
+    const dto = {
+      loggedHours: loggedHours,
+      status: status
     };
 
     const response = await axios.put(`/workTrack/updateTime/${selectedTaskId}`, dto);
@@ -238,7 +276,7 @@ const CreateTaskModal = ({ onClose, onCreate }) => {
 
     onClose();
   };
-  
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
       <div className="bg-white p-6 rounded shadow w-96">
@@ -346,7 +384,35 @@ const App = () => {
   const [developerFilter, setDeveloperFilter] = useState([]);
   const [projectFilter, setProjectFilter] = useState([]);
   const [tasks, setTasks] = useState([]);
+  const [taskCreation, setTaskCreation] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userRole, setUserRole] = useState(null); // To store the user's role
 
+  useEffect(() => {
+    const token = Cookies.get('token');
+    if (token) {
+      try {
+        const decoded = jwtDecode(token);
+        if (decoded && decoded.username) {
+          setIsLoggedIn(true);
+          setUserRole(decoded.role)
+        } else {
+          setIsLoggedIn(false);
+        }
+      } catch (error) {
+        console.error('Invalid JWT:', error);
+        setIsLoggedIn(false);
+      }
+    }
+  }, []);
+  useEffect(() => {
+    if (userRole === "app_admin" || userRole === "proj_owner") {
+      setTaskCreation(true);
+    }
+    else
+    setTaskCreation(false);
+
+  }, [userRole]);
   useEffect(() => {
     const loadTasks = async () => {
       const tasksData = await fetchTasksData();
@@ -422,12 +488,14 @@ const App = () => {
           placeholder="Filter by Project"
           className="w-60"
         />
-        <button
-          onClick={() => setCreatingTask(true)}
-          className="bg-green-500 text-white p-3 rounded-full"
-        >
-          Create New Task
-        </button>
+        {taskCreation ? (<>
+          <button
+            onClick={() => setCreatingTask(true)}
+            className="bg-green-500 text-white p-3 rounded-full"
+          >
+            Create New Task
+          </button></>) : (<></>)}
+
       </div>
 
       {/* Task Categories */}
