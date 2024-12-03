@@ -67,8 +67,10 @@ function Navbar() {
                 <Link to={'/'} className="flex items-center space-x-3 rtl:space-x-reverse">
                     <span className="self-center text-2xl font-semibold whitespace-nowrap dark:text-white">
                         Final Ratio
+                        <span className="text-xs font-normal ml-1">Manager</span>
                     </span>
                 </Link>
+
                 <button
                     onClick={toggleMenu}
                     data-collapse-toggle="navbar-default"
