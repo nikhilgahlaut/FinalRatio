@@ -1,11 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const { saveOrUpdateMonthlyProgress,getMonthlyProgress  } = require('../controllers/progressController');
+const { saveProgress,fetchProgress} = require('../Controllers/ProgressController');
 
 // Route to fetch progress data for a specific project
-router.get('/:proj_id/:serviceId', getMonthlyProgress);
+router.get('/getProjects', fetchProgress);
 
 // Route to save or update progress data
-router.post('/save', saveOrUpdateMonthlyProgress);
+router.post('/saveProjects', saveProgress);
 
 module.exports = router;

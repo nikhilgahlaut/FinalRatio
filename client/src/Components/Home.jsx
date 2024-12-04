@@ -15,6 +15,7 @@ function Home() {
   const [selectedProject, setSelectedProject] = useState(null);
   const [services, setServices] = useState([]);
   const [progressData, setProgressData] = useState({});
+  const [updatedOnData, setUpdatedOnData] = useState({});
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeServices, setActiveServices] = useState({});
   const [quarterIndex, setQuarterIndex] = useState(0);
@@ -26,6 +27,8 @@ function Home() {
   const [userRole, setUserRole] = useState(null); // To store the user's role
   const [username, setUsername] = useState('');
   const [editable, setEditable] = useState(false);
+  const [availableYears, setAvailableYears] = useState([]);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
 
   useEffect(() => {
@@ -45,7 +48,77 @@ function Home() {
         setIsLoggedIn(false);
       }
     }
+    // setProgressData({
+    //   "Nov": { "Payroll": 25, "Monthly Accounting": 50 },
+    //   "Dec": { "Payroll": 40, "Monthly Accounting": 60 },
+    //   // Add additional months and services as needed
+    // });
   }, []);
+
+  useEffect(() => {
+    const fetchProgressData = async () => {
+      if (!selectedProject || !selectedProject.proj_id || !activeServices) {
+        console.log("Skipping fetchProgressData due to missing dependencies");
+        return;
+      }
+
+      const proj_id = selectedProject.proj_id;
+      const activeServiceKeys = Object.keys(activeServices).filter(
+        (key) => activeServices[key] === true
+      );
+
+      try {
+        const promises = activeServiceKeys.map((serviceId) =>
+          axios.get('/progress/getProjects', {
+            params: { proj_id, serviceId },
+          })
+        );
+
+        const responses = await Promise.all(promises);
+
+        let combinedData = {};
+        let years = new Set(); // Collect unique years
+        let updatedOnDate = {};
+        responses.forEach((response) => {
+          if (response.data && response.data.data) {
+            response.data.data.forEach((item) => {
+              // Add year to the Set
+              years.add(item.year);
+              // console.log("year Set:",years);
+
+              // Group by month and assign progress by service
+              if (item.year === selectedYear) {
+                combinedData[item.month] = {
+                  ...(combinedData[item.month] || {}),
+                  [item.serviceId]: item.progress,
+                };
+                if(item.progress===100){
+                  updatedOnDate[item.month] = {
+                    ...(updatedOnDate[item.month] || {}),
+                    [item.serviceId]: item.updatedOn,
+                  };
+                }
+                
+              }
+            });
+          }
+        });
+        // console.log("got years:", years);
+        setAvailableYears(Array.from(years).sort()); // Convert Set to sorted array
+        setProgressData(combinedData); // Update state with data for the selected year
+        console.log("combined", combinedData);
+        console.log(updatedOnDate);
+        setUpdatedOnData(updatedOnDate);
+        //console.log("date Data", updatedOnData);
+        // console.log("All years", availableYears);
+
+      } catch (error) {
+        console.error("Error fetching progress data:", error);
+      }
+    };
+
+    fetchProgressData();
+  }, [selectedProject, activeServices, selectedYear]);
 
 
   //only show modal for proj_owner, app_admin
@@ -206,31 +279,57 @@ function Home() {
     setIsSliderTouched(true); // Mark slider as touched
   };
 
-  console.log("progresss",progressData);
-  
+  //console.log("progresss",progressData);
 
-  // const saveProgressData = async () => {
-  //   setIsSaving(true);
+  const saveProgressData = async () => {
+    if (!progressData || !selectedProject || !activeServices) {
+      console.log("No data to save or dependencies are missing.");
+      return;
+    }
 
-  //   try {
-  //     const response = await axios.post("/client/updateServices", {
-  //       proj_id: selectedProject.proj_id, // Replace with dynamic proj_id if required
-  //       progressData,
-  //     });
+    const proj_id = selectedProject.proj_id; // Get project ID
 
-  //     if (response.data.success) {
-  //       alert("Progress saved!");
-  //       setIsSliderTouched(false); // Reset slider touch state after saving
-  //     } else {
-  //       alert("Failed to save progress. Please try again.");
-  //     }
-  //   } catch (error) {
-  //     console.error("Error saving progress data:", error);
-  //     alert("An error occurred while saving progress.");
-  //   } finally {
-  //     setIsSaving(false);
-  //   }
-  // };
+    try {
+      const promises = [];
+
+      // Iterate over months in progressData
+      for (const [month, services] of Object.entries(progressData)) {
+        // Iterate over services for the current month
+        for (const [serviceId, progress] of Object.entries(services)) {
+          // Ensure the service is active
+          if (activeServices[serviceId]) {
+            // Format data for POST request
+            const payload = {
+              proj_id,
+              serviceId,
+              year: selectedYear, // Use selectedYear from dropdown
+              month,
+              progress,
+            };
+
+            // Create a POST request promise
+            promises.push(
+              axios.post('/progress/saveProjects', payload).catch((err) => {
+                console.error(
+                  `Error saving data for ${serviceId} (${month}, ${selectedYear}):`,
+                  err
+                );
+              })
+            );
+          }
+        }
+      }
+
+      // Wait for all POST requests to complete
+      await Promise.all(promises);
+      window.location.reload();
+      console.log("All data saved successfully.");
+    } catch (error) {
+      console.error("Error saving progress data:", error);
+    }
+  };
+
+
 
   // Open/close the settings modal
   const settingFn = () => {
@@ -240,7 +339,7 @@ function Home() {
   // Set current quarter index based on the current month
   useEffect(() => {
     fetchServices();
-    fetchUserServices();
+    //fetchUserServices();
 
     const currentMonth = new Date().getMonth();
     setQuarterIndex(Math.floor(currentMonth / 3));
@@ -390,14 +489,32 @@ function Home() {
           </button>
         )}
 
-        {editable && (
-          <button
-            onClick={settingFn}
-            className="absolute top-4 right-4 p-2 rounded-full text-gray-800 dark:text-white bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700"
+
+
+        <div className="absolute top-4 right-4 flex items-center space-x-2">
+          <select
+            value={selectedYear}
+            onChange={(e) => setSelectedYear(Number(e.target.value))}
+            className="absolute top-4 right-20 p-2 bg-white dark:bg-gray-800 border rounded text-gray-800 dark:text-white shadow"
           >
-            <FiSettings size={24} />
-          </button>
-        )}
+            {availableYears.map((year) => (
+              <option key={year} value={year}>
+                {year}
+              </option>
+            ))}
+          </select>
+
+          {editable && (
+            <button
+              onClick={settingFn}
+              className="absolute top-4 right-4 p-2 rounded-full text-gray-800 dark:text-white bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700"
+            >
+              <FiSettings size={24} />
+            </button>
+          )}
+
+        </div>
+
 
 
         {/* Settings Modal */}
@@ -512,7 +629,21 @@ function Home() {
                             months.indexOf(month) > currentMonth
                           }
                         />
+
+                        {/* Show completed date if progress is 100% */}
+                        {updatedOnData[month]?.[service] ? (
+                          <div className="mt-2 text-sm text-gray-500">
+                            Completed on: {new Intl.DateTimeFormat('en-US', {
+                              day: '2-digit',
+                              month: 'short',
+                              year: 'numeric'
+                            }).format(new Date(updatedOnData[month]?.[service]))}
+                          </div>
+                        ) : (<></>
+                          //<div className="mt-2 text-sm text-red-500">No completion date available</div>
+                        )}
                       </div>
+
                     </div>
                   ))}
                 </React.Fragment>
@@ -522,7 +653,7 @@ function Home() {
             <div className="flex justify-end mt-4 w-full max-w-4xl">
               {userRole !== "proj_client" ? (<>
                 <button
-                  onClick={saveServicesToBackend}
+                  onClick={saveProgressData}
                   className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
                   disabled={!isSliderTouched || isSaving} // Disable if no slider touched or saving
                 >
