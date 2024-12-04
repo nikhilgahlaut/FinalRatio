@@ -14,15 +14,7 @@ function Access() {
   const [error, setError] = useState(null);
   const [projects, setProjects] = useState([]);
   const [isFetchingProjects, setIsFetchingProjects] = useState(false); // Loading state for projects
-  
 
-  // const projects = [
-  //   { value: 'Project A', label: 'Project A' },
-  //   { value: 'Project B', label: 'Project B' },
-  //   { value: 'Project C', label: 'Project C' },
-  // ];
-
-  // Fetch users from the API
   useEffect(() => {
     const fetchUsers = async () => {
       try {
@@ -79,7 +71,6 @@ function Access() {
   );
 
   const openModal = (user) => {
-    console.log('Opening modal for user:', user); // Debugging log
     setSelectedUser(user);
     setSelectedUserType(user.role || ''); // Prepopulate role
     setSelectedProjects(
@@ -89,7 +80,6 @@ function Access() {
     );
     setIsModalOpen(true);
   };
-  
 
   const closeModal = () => {
     setIsModalOpen(false);
@@ -109,7 +99,6 @@ function Access() {
     }
 
     try {
-      console.log('Selected projects:', selectedProjects.map((project) => project.value));
       const updatedUser = {
         email: selectedUser.email,
         usertype: selectedUserType,
@@ -135,7 +124,8 @@ function Access() {
   };
 
   return (
-    <div id="controlled-tab-example" className="mb-3">
+    <div id="controlled-tab-example" className="min-h-screen bg-[#fefdfb] mb-3">
+
       <div className="flex border-b">
         <button
           className={`p-4 ${key === 'New' ? 'border-b-2 border-purple-500' : ''}`}
@@ -158,12 +148,10 @@ function Access() {
       </div>
       <div className="p-4">
         {isLoading ? (
-          // Loading Spinner
           <div className="flex justify-center items-center h-20">
             <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-purple-500"></div>
           </div>
         ) : key === 'New' ? (
-          // New Access Tab
           <div>
             <div className="max-w-md mx-auto bg-white rounded-lg shadow-md p-6">
               <input
@@ -189,7 +177,6 @@ function Access() {
             </div>
           </div>
         ) : (
-          // Existing Access Tab
           <div>
             <div className="max-w-md mx-auto bg-white rounded-lg shadow-md p-6">
               <input
@@ -217,7 +204,6 @@ function Access() {
           </div>
         )}
       </div>
-
 
       {isModalOpen && selectedUser && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
@@ -262,13 +248,13 @@ function Access() {
             </div>
             <div className="flex justify-end space-x-4">
               <button
-                className="bg-green-500 text-white px-4 py-2 rounded"
+                className="bg-green-500 text-white p-2 rounded hover:bg-green-700"
                 onClick={handleUpdateAccess}
               >
-                Accept
+                Update Access
               </button>
               <button
-                className="bg-red-500 text-white px-4 py-2 rounded"
+                className="bg-gray-500 text-white p-2 rounded hover:bg-gray-700"
                 onClick={closeModal}
               >
                 Cancel
