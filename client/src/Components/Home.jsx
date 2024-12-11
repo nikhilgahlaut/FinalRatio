@@ -438,7 +438,7 @@ function Home() {
   };
 
   return (
-    <div className="relative min-h-screen bg-[#fefdfb] dark:bg-gray-900 dark:text-white">
+    <div className="relative min-h-screen bg-[#fefdfb]">
       {/* Overlay when sidebar is open */}
       {isSidebarOpen && (
         <div
@@ -449,11 +449,11 @@ function Home() {
 
       {/* Sliding Sidebar */}
       <div
-        className={`fixed top-0 left-0 h-full bg-gray-100 dark:bg-gray-800 shadow-md transform transition-transform duration-300 z-50 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+        className={`fixed top-0 left-0 h-full bg-gray-100 shadow-md transform transition-transform duration-300 z-50 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"
           } w-64`}
       >
         <div className="p-4">
-          <h2 className="text-lg font-bold text-gray-800 dark:text-white mb-4">
+          <h2 className="text-lg font-bold text-gray-800 mb-4">
             Your Projects
           </h2>
           <ul>
@@ -461,7 +461,7 @@ function Home() {
               projects.map((project) => (
                 <li
                   key={project.proj_id} // Use unique ID if available
-                  className={`p-2 mb-2 rounded cursor-pointer ${selectedProject === project ? "bg-green-600 text-black" : "bg-gray-200 dark:bg-gray-700"
+                  className={`p-2 mb-2 rounded cursor-pointer ${selectedProject === project ? "bg-green-600 text-black" : "bg-gray-200"
                     }`}
                   onClick={() => handleProjectClick(project)} // Update to handle project selection
                 >
@@ -469,7 +469,7 @@ function Home() {
                 </li>
               ))
             ) : (
-              <li className="text-gray-500 dark:text-gray-400">No Projects Found</li>
+              <li className="text-gray-500">No Projects Found</li>
             )}
           </ul>
 
@@ -478,11 +478,11 @@ function Home() {
       </div>
 
       {/* Main content */}
-      <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-[#fefdfb] dark:bg-gray-900 dark:text-white relative">
+      <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-[#fefdfb] relative">
         {/* Menu Button */}
         {!isSidebarOpen && ( // Only show hamburger when sidebar is closed
           <button
-            className="absolute top-4 left-4 p-2 text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-800 rounded-full shadow-md z-50 hover:bg-gray-300 dark:hover:bg-gray-700"
+            className="absolute top-4 left-4 p-2 text-gray-700 bg-gray-200 rounded-full shadow-md z-50 hover:bg-gray-300"
             onClick={toggleSidebar}
           >
             <FiMenu size={24} />
@@ -495,7 +495,7 @@ function Home() {
           <select
             value={selectedYear}
             onChange={(e) => setSelectedYear(Number(e.target.value))}
-            className="absolute top-4 right-20 p-2 bg-white dark:bg-gray-800 border rounded text-gray-800 dark:text-white shadow"
+            className="absolute top-4 right-20 p-2 bg-white border rounded text-gray-800 shadow"
           >
             {availableYears.map((year) => (
               <option key={year} value={year}>
@@ -507,7 +507,7 @@ function Home() {
           {editable && (
             <button
               onClick={settingFn}
-              className="absolute top-4 right-4 p-2 rounded-full text-gray-800 dark:text-white bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700"
+              className="absolute top-4 right-4 p-2 rounded-full text-gray-800 bg-gray-200 hover:bg-gray-300"
             >
               <FiSettings size={24} />
             </button>
@@ -520,11 +520,11 @@ function Home() {
         {/* Settings Modal */}
         {isModalOpen && (
           <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-sm w-full">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Services</h2>
+            <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Services</h2>
               <div className="mb-4 text-center">
                 {services.length === 0 ? (
-                  <div className="text-gray-600 dark:text-gray-400">No Services Available</div>
+                  <div className="text-gray-600">No Services Available</div>
                 ) : (
                   services.map((service) => (
                     <div key={service._id} className="flex justify-between items-center mb-2">
@@ -550,10 +550,10 @@ function Home() {
         {/* No services message */}
         {!hasActiveServices && (
           <div className="flex flex-col items-center justify-center space-y-4">
-            <h2 className="text-2xl font-bold text-gray-600 dark:text-gray-400">
+            <h2 className="text-2xl font-bold text-gray-600">
               No Services Opted
             </h2>
-            <div className="text-lg text-gray-500 dark:text-gray-400">
+            <div className="text-lg text-gray-500">
               You haven't opted for any services yet. Please select services from the settings.
             </div>
           </div>
@@ -579,11 +579,11 @@ function Home() {
               </button>
             </div>
 
-            <div className="grid grid-cols-[auto_repeat(3,_1fr)] gap-2 w-full max-w-4xl border border-gray-300 dark:border-gray-700 rounded-lg shadow-md overflow-hidden">
+            <div className="grid grid-cols-[auto_repeat(3,_1fr)] gap-2 w-full max-w-4xl border border-gray-300  rounded-lg shadow-md overflow-hidden">
               {/* Month Headers */}
-              <div className="bg-gray-200 dark:bg-gray-800 sticky top-0 z-10"></div>
+              <div className="bg-gray-200  sticky top-0 z-10"></div>
               {displayedMonths.map((month) => (
-                <div key={month} className="bg-gray-200 dark:bg-gray-800 text-center font-semibold py-2">
+                <div key={month} className="bg-gray-200  text-center font-semibold py-2">
                   {month}
                 </div>
               ))}
@@ -592,7 +592,7 @@ function Home() {
               {Object.keys(activeServices).map((service) => (
                 <React.Fragment key={service}>
                   {/* Service Name */}
-                  <div className="bg-gray-300 dark:bg-gray-800 font-semibold py-2 px-4 text-center">
+                  <div className="bg-gray-300  font-semibold py-2 px-4 text-center">
                     {service}
                   </div>
 
@@ -600,7 +600,7 @@ function Home() {
                   {displayedMonths.map((month) => (
                     <div
                       key={`${service}-${month}`}
-                      className="flex items-center justify-center bg-white dark:bg-gray-900 p-2 border border-gray-300 dark:border-gray-700"
+                      className="flex items-center justify-center bg-white  p-2 border border-gray-300 "
                     >
                       <div className="text-center">
                         <span>{progressData[month]?.[service] || 0}%</span>

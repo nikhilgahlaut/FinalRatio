@@ -60,14 +60,14 @@ function LandingPage() {
 
     return (
         <div className="bg-white">
-            <section className="bg-[#FCF8F1] bg-opacity-30 py-10 sm:py-16 lg:py-24 dark:bg-gray-900">
+            <section className="bg-[#FCF8F1] bg-opacity-30 py-10 sm:py-16 lg:py-24 ">
                 <div className="px-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
                     <div className="grid items-center grid-cols-1 gap-12 lg:grid-cols-2">
                         <div>
                             <p className="text-base font-semibold tracking-wider text-green-600 uppercase">A social media for learners</p>
-                            <h1 className="mt-4 text-4xl font-bold text-black lg:mt-8 sm:text-6xl xl:text-8xl dark:text-white">{`${greet},`}</h1>
-                            <h1 className="mt-4 text-2xl font-bold text-black lg:mt-8 sm:text-6xl xl:text-4xl dark:text-white">{isLoggedIn && `${username}`}</h1>
-                            <h2 className="mt-4 text-4xl text-black dark:text-white lg:mt-8 sm:text-xl xl:text-4xl">{isLoggedIn ? 'Welcome back!' : ''}</h2>
+                            <h1 className="mt-4 text-4xl font-bold text-black lg:mt-8 sm:text-6xl xl:text-8xl ">{`${greet},`}</h1>
+                            <h1 className="mt-4 text-2xl font-bold text-black lg:mt-8 sm:text-6xl xl:text-4xl ">{isLoggedIn && `${username}`}</h1>
+                            <h2 className="mt-4 text-4xl text-black  lg:mt-8 sm:text-xl xl:text-4xl">{isLoggedIn ? 'Welcome back!' : ''}</h2>
 
                             <Link
                                 to={isLoggedIn ? "/" : "/signup"}
@@ -81,10 +81,10 @@ function LandingPage() {
                                 </svg>
                             </Link>
 
-                            <p className="mt-5 text-gray-600 dark:text-white">
+                            <p className="mt-5 text-gray-600 ">
                                 {isLoggedIn ? '' : 'Already joined us?'}
                                 {!isLoggedIn && (
-                                    <Link to="/login" title="" className="text-black transition-all duration-200 hover:underline dark:text-white"> Log in</Link>
+                                    <Link to="/login" title="" className="text-black transition-all duration-200 hover:underline "> Log in</Link>
                                 )}
                             </p>
                         </div>
